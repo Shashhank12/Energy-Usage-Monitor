@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "719288614761",
+    "project_id": "energy-usage-monitor2025",
+    "storage_bucket": "energy-usage-monitor2025.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:719288614761:android:5ad8842257e53bd3ae87f8",
+        "android_client_info": {
+          "package_name": "edu.sjsu.android.energyusagemonitor"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "719288614761-d4bequvsjlduvj5aeh5apvjquv74osnr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.sjsu.android.energyusagemonitor",
+            "certificate_hash": "5d228deb3eb7fd05c23a170a2dda01e474d12e68"
+          }
+        },
+        {
+          "client_id": "719288614761-f6dieonpml6a0juef9980jj4lmq4mhis.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCoRStt1EW8URU7pg3rxLEEEWCAuLtjyJo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "719288614761-f6dieonpml6a0juef9980jj4lmq4mhis.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

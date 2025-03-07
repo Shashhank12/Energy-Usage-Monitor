@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Energy Usage Monitor</string>
+    <string name="default_web_client_id">719288614761-f6dieonpml6a0juef9980jj4lmq4mhis.apps.googleusercontent.com</string>
 </resources>

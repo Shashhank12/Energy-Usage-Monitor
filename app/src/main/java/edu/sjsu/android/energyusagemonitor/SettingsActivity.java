@@ -1,4 +1,4 @@
-package com.example.myapp;
+package edu.sjsu.android.energyusagemonitor;
 
 import android.os.Bundle;
 

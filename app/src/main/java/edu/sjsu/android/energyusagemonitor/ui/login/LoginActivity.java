@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -29,8 +30,8 @@ import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
-import edu.sjsu.android.energyusagemonitor.activities.HomeDashboardActivity;
 import edu.sjsu.android.energyusagemonitor.R;
+import edu.sjsu.android.energyusagemonitor.activities.HomeDashboardActivity;
 import edu.sjsu.android.energyusagemonitor.databinding.ActivityLoginBinding;
 
 public class LoginActivity extends AppCompatActivity {
@@ -125,8 +126,10 @@ public class LoginActivity extends AppCompatActivity {
                 loginViewModel.login(usernameEditText.getText().toString(),
                         passwordEditText.getText().toString());
 
-                // Redirect to home dashboard after login
-                Intent intent = new Intent(LoginActivity.this, HomeDashboardActivity.class);
+                Intent intent = new Intent(LoginActivity.this, edu.sjsu.android.energyusagemonitor.activities.HomeDashboardActivity.class);
+                startActivity(intent);
+                finish();
+
                 startActivity(intent);
                 finish();
             }
@@ -163,13 +166,18 @@ public class LoginActivity extends AppCompatActivity {
     private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+            if (account != null) {
+                Log.d("GoogleSignIn", "Sign-in successful: " + account.getEmail());
 
-            // Redirect to HomeDashboardActivity after successful Google Sign-In
-            Intent intent = new Intent(LoginActivity.this, HomeDashboardActivity.class);
-            startActivity(intent);
-            finish();
-
+                Intent intent = new Intent(LoginActivity.this, HomeDashboardActivity.class);
+                startActivity(intent);
+                finish();
+            } else {
+                Log.e("GoogleSignIn", "Sign-in failed: Account is null.");
+                showLoginFailed(R.string.login_failed);
+            }
         } catch (ApiException e) {
+            Log.e("GoogleSignIn", "Sign-in failed with error code: " + e.getStatusCode(), e);
             showLoginFailed(R.string.login_failed);
         }
     }

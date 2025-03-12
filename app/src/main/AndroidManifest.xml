@@ -42,11 +42,15 @@
         <activity
             android:name=".activities.HomeDashboardActivity"
             android:exported="true"
-            android:label="Home Dashboard"/>
+            android:label="Home Dashboard Page"/>
 
         <activity android:name=".activities.SettingsActivity"
             android:exported="true"
-            android:label="Settings" />
+            android:label="Settings Page" />
+
+        <activity android:name=".activities.ProfileActivity"
+            android:exported="true"
+            android:label="Profile Page"/>
 
     </application>
 </manifest>

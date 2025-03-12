@@ -1,7 +1,9 @@
-package edu.sjsu.android.energyusagemonitor;
+package edu.sjsu.android.energyusagemonitor.activities;
 
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
+
+import edu.sjsu.android.energyusagemonitor.R;
 
 public class ProfileActivity extends AppCompatActivity {
     @Override

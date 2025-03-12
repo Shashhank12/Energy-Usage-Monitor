@@ -1,4 +1,4 @@
-package edu.sjsu.android.energyusagemonitor;
+package edu.sjsu.android.energyusagemonitor.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -13,6 +13,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
+import edu.sjsu.android.energyusagemonitor.R;
 import edu.sjsu.android.energyusagemonitor.ui.login.LoginActivity;
 
 public class HomeDashboardActivity extends AppCompatActivity {

@@ -29,7 +29,7 @@ import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
-import edu.sjsu.android.energyusagemonitor.HomeDashboardActivity;
+import edu.sjsu.android.energyusagemonitor.activities.HomeDashboardActivity;
 import edu.sjsu.android.energyusagemonitor.R;
 import edu.sjsu.android.energyusagemonitor.databinding.ActivityLoginBinding;
 

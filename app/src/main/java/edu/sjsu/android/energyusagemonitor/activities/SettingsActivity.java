@@ -1,221 +1,116 @@
 package edu.sjsu.android.energyusagemonitor.activities;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.view.MenuItem;
-import android.widget.Toast;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBarDrawerToggle;
+import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.drawerlayout.widget.DrawerLayout;
-import com.google.android.material.navigation.NavigationView;
 
-import java.util.List;
+import com.google.gson.Gson;
 
 import edu.sjsu.android.energyusagemonitor.R;
-import edu.sjsu.android.energyusagemonitor.ui.login.LoginActivity;
-import edu.sjsu.android.energyusagemonitor.utilityapi.models.AuthorizationsResponse;
+import edu.sjsu.android.energyusagemonitor.databinding.ActivitySettingsBinding;
 import edu.sjsu.android.energyusagemonitor.utilityapi.models.BillsResponse;
-import edu.sjsu.android.energyusagemonitor.utilityapi.models.FormResponse;
-import edu.sjsu.android.energyusagemonitor.utilityapi.models.HistoricalCollectionRequest;
-import edu.sjsu.android.energyusagemonitor.utilityapi.models.HistoricalCollectionResponse;
-import edu.sjsu.android.energyusagemonitor.utilityapi.models.MeterResponse;
-import edu.sjsu.android.energyusagemonitor.utilityapi.models.TestSubmitRequest;
-import edu.sjsu.android.energyusagemonitor.utilityapi.models.TestSubmitResponse;
+import edu.sjsu.android.energyusagemonitor.utilityapi.RetrofitClient;
+import edu.sjsu.android.energyusagemonitor.utilityapi.UtilityApiService;
+import edu.sjsu.android.energyusagemonitor.utils.Constants;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
-import edu.sjsu.android.energyusagemonitor.utilityapi.UtilityApiService;
 
-public class SettingsActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
-    private DrawerLayout drawerLayout;
-    private static final String API_TOKEN = "paste-api-key-from-discord";
+public class SettingsActivity extends AppCompatActivity {
+    private static final String TAG = "SettingsActivity";
     private UtilityApiService apiService;
+    private static List<BillsResponse.Bill> bills = new ArrayList<>();
+    // binding
+    private ActivitySettingsBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        apiService = RetrofitClient.getClient().create(UtilityApiService.class);
 
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setHomeButtonEnabled(true);
-        }
+        binding = ActivitySettingsBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        drawerLayout = findViewById(R.id.drawer_layout);
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar,
-                R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://utilityapi.com/")
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        apiService = retrofit.create(UtilityApiService.class);
-
-        startQuickstart();
-    }
-
-    private void startQuickstart() {
-        Call<FormResponse> createFormCall = apiService.createForm("Bearer " + API_TOKEN);
-        createFormCall.enqueue(new Callback<FormResponse>() {
-            @Override
-            public void onResponse(Call<FormResponse> call, Response<FormResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    String formUid = response.body().getUid();
-                    testSubmitForm(formUid);
-                } else {
-                    Toast.makeText(SettingsActivity.this, "Failed to create form", Toast.LENGTH_SHORT).show();
-                }
+        binding.connectUtilityButton.setOnClickListener(v -> {
+            String meterUid;
+            if (Constants.USE_TEST_DATA) {
+                meterUid = Constants.TEST_METER_UID;
+                Log.d(TAG, "Using test data:");
+                Log.d(TAG, "Meter UID: " + meterUid);
+            } else {
+                meterUid = "REAL_METER";
             }
-
-            @Override
-            public void onFailure(Call<FormResponse> call, Throwable t) {
-                Toast.makeText(SettingsActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
+            fetchBills(meterUid);
         });
     }
 
-    private void testSubmitForm(String formUid) {
-        TestSubmitRequest request = new TestSubmitRequest("DEMO", "residential");
-        Call<TestSubmitResponse> testSubmitCall = apiService.testSubmitForm("Bearer " + API_TOKEN, formUid, request);
-        testSubmitCall.enqueue(new Callback<TestSubmitResponse>() {
-            @Override
-            public void onResponse(Call<TestSubmitResponse> call, Response<TestSubmitResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    String referralCode = response.body().getReferral();
-                    getAuthorizations(referralCode);
-                } else {
-                    Toast.makeText(SettingsActivity.this, "Failed to test submit form", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<TestSubmitResponse> call, Throwable t) {
-                Toast.makeText(SettingsActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void getAuthorizations(String referralCode) {
-        Call<AuthorizationsResponse> getAuthorizationsCall = apiService.getAuthorizations("Bearer " + API_TOKEN, referralCode, "meters");
-        getAuthorizationsCall.enqueue(new Callback<AuthorizationsResponse>() {
-            @Override
-            public void onResponse(Call<AuthorizationsResponse> call, Response<AuthorizationsResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    String meterUid = response.body().getAuthorizations().get(0).getMeters().getMeters().get(0).getUid();
-
-                    activateMeters(meterUid);
-                } else {
-                    Toast.makeText(SettingsActivity.this, "Failed to get authorizations", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<AuthorizationsResponse> call, Throwable t) {
-                Toast.makeText(SettingsActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void activateMeters(String meterUid) {
-        HistoricalCollectionRequest request = new HistoricalCollectionRequest(List.of(meterUid), 12);
-        Call<HistoricalCollectionResponse> activateMetersCall = apiService.activateMeters("Bearer " + API_TOKEN, request);
-        activateMetersCall.enqueue(new Callback<HistoricalCollectionResponse>() {
-            @Override
-            public void onResponse(Call<HistoricalCollectionResponse> call, Response<HistoricalCollectionResponse> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    pollMeter(meterUid);
-                } else {
-                    Toast.makeText(SettingsActivity.this, "Failed to activate meters", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<HistoricalCollectionResponse> call, Throwable t) {
-                Toast.makeText(SettingsActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void pollMeter(String meterUid) {
-        Call<MeterResponse> getMeterCall = apiService.getMeter("Bearer " + API_TOKEN, meterUid);
-        getMeterCall.enqueue(new Callback<MeterResponse>() {
-            @Override
-            public void onResponse(Call<MeterResponse> call, Response<MeterResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    if (response.body().getBillCount() > 0 && response.body().getStatus().equals("updated")) {
-                        downloadBills(meterUid);
-                    } else {
-                        new android.os.Handler().postDelayed(() -> pollMeter(meterUid), 5000);
-                    }
-                } else {
-                    Toast.makeText(SettingsActivity.this, "Failed to poll meter", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<MeterResponse> call, Throwable t) {
-                Toast.makeText(SettingsActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void downloadBills(String meterUid) {
-        Call<BillsResponse> getBillsCall = apiService.getBills("Bearer " + API_TOKEN, meterUid);
-        getBillsCall.enqueue(new Callback<BillsResponse>() {
+    private void fetchBills(String meterUid) {
+        String apiToken = "Bearer " + Constants.API_TOKEN;
+        Call<BillsResponse> fetchBillsCall = apiService.getBills(apiToken, meterUid);
+        fetchBillsCall.enqueue(new Callback<BillsResponse>() {
             @Override
             public void onResponse(Call<BillsResponse> call, Response<BillsResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    Toast.makeText(SettingsActivity.this, "Bills downloaded!", Toast.LENGTH_SHORT).show();
+                    bills = response.body().getBills();
+                    Log.d(TAG, "Bills fetched successfully");
+                    Log.d(TAG, "API Response: " + new Gson().toJson(response.body()));
+                    logBillData();
                 } else {
-                    Toast.makeText(SettingsActivity.this, "Failed to download bills", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Failed to fetch bills: " + response.message());
                 }
             }
 
             @Override
             public void onFailure(Call<BillsResponse> call, Throwable t) {
-                Toast.makeText(SettingsActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Error: " + t.getMessage());
             }
         });
     }
 
-    @Override
-    public boolean onSupportNavigateUp() {
-        finish();
-        return true;
+    private void logBillData() {
+        for (BillsResponse.Bill bill : bills) {
+            Log.d(TAG, "Bill Start Date: " + bill.getBase().getBillStartDate());
+            Log.d(TAG, "Bill End Date: " + bill.getBase().getBillEndDate());
+            Log.d(TAG, "Total Cost: " + bill.getBase().getBillTotalCost());
+            Log.d(TAG, "Total kWh: " + bill.getBase().getBillTotalKwh());
+        }
     }
 
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        int id = item.getItemId();
+    public static List<BillsResponse.Bill> getBills() {
+        return bills;
+    }
 
-        if (id == R.id.nav_profile) {
-            startActivity(new Intent(this, ProfileActivity.class));
-        } else if (id == R.id.nav_settings) {
-            Toast.makeText(this, "Already in Settings", Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.nav_notifications) {
-            Toast.makeText(this, "No new notifications", Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.nav_logout) {
-            Toast.makeText(this, "Logging out...", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(this, LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
+    public double getTotalCost() {
+        double totalCost = 0;
+        for (BillsResponse.Bill bill : bills) {
+            totalCost += bill.getBase().getBillTotalCost();
         }
+        return totalCost;
+    }
 
-        drawerLayout.closeDrawers();
-        return true;
+    public double getTotalUsage() {
+        double totalUsage = 0;
+        for (BillsResponse.Bill bill : bills) {
+            totalUsage += bill.getBase().getBillTotalKwh();
+        }
+        return totalUsage;
+    }
+
+    public String getDateRange() {
+        if (bills.isEmpty()) {
+            return "No bills available";
+        }
+        String startDate = bills.get(0).getBase().getBillStartDate();
+        String endDate = bills.get(bills.size() - 1).getBase().getBillEndDate();
+        return "Date Range: " + startDate + " to " + endDate;
     }
 }

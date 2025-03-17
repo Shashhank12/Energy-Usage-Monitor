@@ -15,6 +15,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,6 +30,11 @@ import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GoogleAuthProvider;
 
 import edu.sjsu.android.energyusagemonitor.R;
 import edu.sjsu.android.energyusagemonitor.activities.HomeDashboardActivity;
@@ -40,6 +46,7 @@ public class LoginActivity extends AppCompatActivity {
     private ActivityLoginBinding binding;
     private GoogleSignInClient googleSignInClient;
     private static final int RC_SIGN_IN = 9001;
+    private FirebaseAuth mAuth;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -47,6 +54,8 @@ public class LoginActivity extends AppCompatActivity {
 
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        mAuth = FirebaseAuth.getInstance();
 
         loginViewModel = new ViewModelProvider(this, new LoginViewModelFactory())
                 .get(LoginViewModel.class);
@@ -58,6 +67,7 @@ public class LoginActivity extends AppCompatActivity {
         final SignInButton googleSignInButton = binding.signInButton;
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
                 .build();
         googleSignInClient = GoogleSignIn.getClient(this, gso);
@@ -123,17 +133,48 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 loadingProgressBar.setVisibility(View.VISIBLE);
-                loginViewModel.login(usernameEditText.getText().toString(),
-                        passwordEditText.getText().toString());
+                String username = usernameEditText.getText().toString();
+                String password = passwordEditText.getText().toString();
 
-                Intent intent = new Intent(LoginActivity.this, edu.sjsu.android.energyusagemonitor.activities.HomeDashboardActivity.class);
-                startActivity(intent);
-                finish();
-
-                startActivity(intent);
-                finish();
+                // Attempt to sign in first
+                mAuth.signInWithEmailAndPassword(username, password)
+                        .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task<AuthResult> task) {
+                                if (task.isSuccessful()) {
+                                    // If sign-in is successful, move to HomeDashboardActivity
+                                    FirebaseUser user = mAuth.getCurrentUser();
+                                    if (user != null) {
+                                        Intent intent = new Intent(LoginActivity.this, HomeDashboardActivity.class);
+                                        startActivity(intent);
+                                        finish();
+                                    }
+                                } else {
+                                    // If sign-in fails, attempt registration
+                                    mAuth.createUserWithEmailAndPassword(username, password)
+                                            .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<AuthResult> task) {
+                                                    if (task.isSuccessful()) {
+                                                        // Registration successful, move to HomeDashboardActivity
+                                                        FirebaseUser user = mAuth.getCurrentUser();
+                                                        if (user != null) {
+                                                            Intent intent = new Intent(LoginActivity.this, HomeDashboardActivity.class);
+                                                            startActivity(intent);
+                                                            finish();
+                                                        }
+                                                    } else {
+                                                        // Show error if both login and registration fail
+                                                        showLoginFailed(R.string.login_failed);
+                                                    }
+                                                }
+                                            });
+                                }
+                            }
+                        });
             }
         });
+
 
         googleSignInButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -167,11 +208,7 @@ public class LoginActivity extends AppCompatActivity {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
             if (account != null) {
-                Log.d("GoogleSignIn", "Sign-in successful: " + account.getEmail());
-
-                Intent intent = new Intent(LoginActivity.this, HomeDashboardActivity.class);
-                startActivity(intent);
-                finish();
+                firebaseAuthWithGoogle(account.getIdToken());
             } else {
                 Log.e("GoogleSignIn", "Sign-in failed: Account is null.");
                 showLoginFailed(R.string.login_failed);
@@ -180,6 +217,27 @@ public class LoginActivity extends AppCompatActivity {
             Log.e("GoogleSignIn", "Sign-in failed with error code: " + e.getStatusCode(), e);
             showLoginFailed(R.string.login_failed);
         }
+    }
+
+    private void firebaseAuthWithGoogle(String idToken) {
+        AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            if (user != null) {
+                                Intent intent = new Intent(LoginActivity.this, HomeDashboardActivity.class);
+                                startActivity(intent);
+                                finish();
+                            }
+                        } else {
+                            Log.e("GoogleSignIn", "Sign-in failed: " + task.getException());
+                            showLoginFailed(R.string.login_failed);
+                        }
+                    }
+                });
     }
 
     private void updateUiWithUser(LoggedInUserView model) {

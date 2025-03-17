@@ -39,6 +39,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     implementation("com.google.android.material:material:1.11.0")
+    implementation("com.google.firebase:firebase-analytics")
 
     implementation("com.google.firebase:firebase-firestore-ktx")
 

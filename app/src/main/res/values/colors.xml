@@ -6,4 +6,11 @@
     <color name="teal_700">#018786</color>
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
+    <color name="primary_dark">#004D40</color>
+    <color name="primary_light">#26A69A</color>
+    <color name="on_background_dark">#FFFFFF</color>
+    <color name="on_background_light">#000000</color>
+    <color name="grid_dark">#888888</color>
+    <color name="grid_light">#CCCCCC</color>
+
 </resources>

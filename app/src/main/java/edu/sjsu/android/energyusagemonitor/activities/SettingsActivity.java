@@ -1,44 +1,38 @@
 package edu.sjsu.android.energyusagemonitor.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.gson.Gson;
 
-import edu.sjsu.android.energyusagemonitor.R;
+import java.util.ArrayList;
+import java.util.List;
+
 import edu.sjsu.android.energyusagemonitor.databinding.ActivitySettingsBinding;
-import edu.sjsu.android.energyusagemonitor.utilityapi.models.BillsResponse;
 import edu.sjsu.android.energyusagemonitor.utilityapi.RetrofitClient;
 import edu.sjsu.android.energyusagemonitor.utilityapi.UtilityApiService;
+import edu.sjsu.android.energyusagemonitor.utilityapi.models.BillsResponse;
 import edu.sjsu.android.energyusagemonitor.utils.Constants;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-
 public class SettingsActivity extends AppCompatActivity {
     private static final String TAG = "SettingsActivity";
     private UtilityApiService apiService;
     private static List<BillsResponse.Bill> bills = new ArrayList<>();
-    // binding
     private ActivitySettingsBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_settings);
-
-        apiService = RetrofitClient.getClient().create(UtilityApiService.class);
-
         binding = ActivitySettingsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        apiService = RetrofitClient.getClient().create(UtilityApiService.class);
 
         binding.connectUtilityButton.setOnClickListener(v -> {
             String meterUid;
@@ -49,11 +43,12 @@ public class SettingsActivity extends AppCompatActivity {
             } else {
                 meterUid = "REAL_METER";
             }
-            fetchBills(meterUid);
+            fetchBillsAndNavigate(meterUid);
         });
     }
 
-    private void fetchBills(String meterUid) {
+    // Fetch bills and navigate to HomeDashboardActivity
+    private void fetchBillsAndNavigate(String meterUid) {
         String apiToken = "Bearer " + Constants.API_TOKEN;
         Call<BillsResponse> fetchBillsCall = apiService.getBills(apiToken, meterUid);
         fetchBillsCall.enqueue(new Callback<BillsResponse>() {
@@ -64,6 +59,9 @@ public class SettingsActivity extends AppCompatActivity {
                     Log.d(TAG, "Bills fetched successfully");
                     Log.d(TAG, "API Response: " + new Gson().toJson(response.body()));
                     logBillData();
+
+                    Intent intent = new Intent(SettingsActivity.this, HomeDashboardActivity.class);
+                    startActivity(intent);
                 } else {
                     Log.e(TAG, "Failed to fetch bills: " + response.message());
                 }

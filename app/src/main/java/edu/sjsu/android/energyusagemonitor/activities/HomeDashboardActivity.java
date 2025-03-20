@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.sjsu.android.energyusagemonitor.R;
+import edu.sjsu.android.energyusagemonitor.ui.login.LoginActivity;
 import edu.sjsu.android.energyusagemonitor.uiBarchart.EnergyBarChartView;
 import edu.sjsu.android.energyusagemonitor.utilityapi.models.BillsResponse;
 
@@ -68,7 +69,10 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
             Toast.makeText(this, "No new notifications", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_logout) {
             Toast.makeText(this, "Logging out...", Toast.LENGTH_SHORT).show();
-            // Add logout logic if needed
+            Intent intent = new Intent(this, LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
         }
 
         drawerLayout.closeDrawer(GravityCompat.START);

@@ -42,15 +42,27 @@
         <activity
             android:name=".activities.HomeDashboardActivity"
             android:exported="true"
-            android:label="Home Dashboard Page"/>
+            android:label="Home Dashboard Page" />
 
-        <activity android:name=".activities.SettingsActivity"
+        <activity
+            android:name=".activities.SettingsActivity"
             android:exported="true"
             android:label="Settings Page" />
 
-        <activity android:name=".activities.ProfileActivity"
+        <activity
+            android:name=".activities.ProfileActivity"
             android:exported="true"
-            android:label="Profile Page"/>
+            android:label="Profile Page" />
+
+        <activity
+            android:name=".activities.EnergyMonitorActivity"
+            android:exported="true"
+            android:label="Energy Monitor Page" />
+        <activity
+            android:name=".activities.NotificationsActivity"
+            android:exported="false"
+            android:label="Notifications Page" />
 
     </application>
+
 </manifest>

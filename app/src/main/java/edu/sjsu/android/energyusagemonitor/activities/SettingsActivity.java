@@ -9,6 +9,9 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.drawerlayout.widget.DrawerLayout;
+
+import androidx.core.view.GravityCompat;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -37,6 +40,7 @@ public class SettingsActivity extends AppCompatActivity implements NavigationVie
     private static List<BillsResponse.Bill> bills = new ArrayList<>();
     private ActivitySettingsBinding binding;
     private ActionBarDrawerToggle toggle;
+    private DrawerLayout drawerLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,13 +83,15 @@ public class SettingsActivity extends AppCompatActivity implements NavigationVie
         int id = item.getItemId();
 
         if (id == R.id.nav_profile) {
-            startActivity(new Intent(SettingsActivity.this, ProfileActivity.class));
-
+            startActivity(new Intent(this, ProfileActivity.class));
         } else if (id == R.id.nav_settings) {
-
+            startActivity(new Intent(this, SettingsActivity.class));
         } else if (id == R.id.nav_notifications) {
             Toast.makeText(this, "No new notifications", Toast.LENGTH_SHORT).show();
-
+        } else if (id == R.id.nav_home_dashboard) {
+            startActivity(new Intent(this, HomeDashboardActivity.class));
+        }else if (id == R.id.nav_energy_monitor) {
+            startActivity(new Intent(this, EnergyMonitorActivity.class));
         } else if (id == R.id.nav_logout) {
             Toast.makeText(this, "Logging out...", Toast.LENGTH_SHORT).show();
 
@@ -100,11 +106,19 @@ public class SettingsActivity extends AppCompatActivity implements NavigationVie
             });
         }
 
-        binding.drawerLayout.closeDrawers();
+        drawerLayout.closeDrawer(GravityCompat.START);
         return true;
     }
 
-    // Fetch bills and navigate to HomeDashboardActivity
+    @Override
+    public void onBackPressed() {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
+    }
+
     private void fetchBillsAndNavigate(String meterUid) {
         String apiToken = "Bearer " + Constants.API_TOKEN;
         Call<BillsResponse> fetchBillsCall = apiService.getBills(apiToken, meterUid);
@@ -117,7 +131,7 @@ public class SettingsActivity extends AppCompatActivity implements NavigationVie
                     Log.d(TAG, "API Response: " + new Gson().toJson(response.body()));
                     logBillData();
 
-                    Intent intent = new Intent(SettingsActivity.this, HomeDashboardActivity.class);
+                    Intent intent = new Intent(SettingsActivity.this, EnergyMonitorActivity.class);
                     startActivity(intent);
                 } else {
                     Log.e(TAG, "Failed to fetch bills: " + response.message());

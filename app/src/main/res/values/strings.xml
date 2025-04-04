@@ -4,7 +4,7 @@
     <string name="title_activity_login">Login Page</string>
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Password</string>
-    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in">Sign in</string>
     <string name="action_sign_in_short">Sign in</string>
     <string name="welcome">"Welcome !"</string>
     <string name="invalid_username">Not a valid username</string>
@@ -12,4 +12,9 @@
     <string name="login_failed">"Login failed"</string>
     <string name="navigation_drawer_open">Open Navigation Drawer</string>
     <string name="navigation_drawer_close">Close Navigation Drawer</string>
+    <string name="login_title">LOGIN</string>
+    <string name="login_choice">Or login with</string>
+    <string name="register_title">REGISTER</string>
+    <string name="register">Register here.</string>
+    <string name="register_extra_text">Don\'t have an account?</string>
 </resources>

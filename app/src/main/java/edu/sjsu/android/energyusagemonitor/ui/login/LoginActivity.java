@@ -38,6 +38,8 @@ import com.google.firebase.auth.GoogleAuthProvider;
 
 import edu.sjsu.android.energyusagemonitor.R;
 import edu.sjsu.android.energyusagemonitor.activities.HomeDashboardActivity;
+import edu.sjsu.android.energyusagemonitor.activities.MainActivity;
+import edu.sjsu.android.energyusagemonitor.activities.RegisterActivity;
 import edu.sjsu.android.energyusagemonitor.databinding.ActivityLoginBinding;
 
 public class LoginActivity extends AppCompatActivity {
@@ -63,6 +65,7 @@ public class LoginActivity extends AppCompatActivity {
         final EditText usernameEditText = binding.username;
         final EditText passwordEditText = binding.password;
         final Button loginButton = binding.login;
+        final Button registerButton = binding.register;
         final ProgressBar loadingProgressBar = binding.loading;
         final SignInButton googleSignInButton = binding.signInButton;
 
@@ -182,6 +185,11 @@ public class LoginActivity extends AppCompatActivity {
             public void onClick(View v) {
                 forceGoogleAccountSelection();
             }
+        });
+
+        registerButton.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
+            startActivity(intent);
         });
     }
 

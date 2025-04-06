@@ -66,6 +66,11 @@
             android:exported="false"
             android:label="Notifications Page" />
 
+        <activity
+            android:name=".activities.RegisterActivity"
+            android:exported="true"
+            android:label="Registration Page" />
+
     </application>
 
 </manifest>

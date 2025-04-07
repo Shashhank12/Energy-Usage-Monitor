@@ -58,6 +58,14 @@ dependencies {
     implementation(libs.lifecycle.livedata.ktx)
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation(libs.activity)
+    implementation(libs.generativeai)
+
+    // for markdown
+    implementation(libs.core)
+    implementation(libs.html)
+    implementation(libs.ext.strikethrough)
+    implementation(libs.ext.tables)
+    implementation(libs.linkify)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

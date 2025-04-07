@@ -39,6 +39,16 @@
             android:label="@string/title_activity_login" />
 
         <activity
+            android:name=".activities.AnalysisActivity"
+            android:label="@string/energy_analysis"
+            android:parentActivityName=".activities.MainActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".activities.MainActivity" />
+        </activity>
+
+        <activity
             android:name="com.google.android.gms.auth.api.signin.internal.SignInHubActivity"
             android:excludeFromRecents="true"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />

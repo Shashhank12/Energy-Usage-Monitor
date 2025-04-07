@@ -17,4 +17,32 @@
     <string name="register_title">REGISTER</string>
     <string name="register">Register here.</string>
     <string name="register_extra_text">Don\'t have an account?</string>
+
+    <string name="back">Back</string>
+    <string name="info">Info</string>
+    <string name="energy_analysis">Energy Analysis</string>
+    <string name="select_bill">Select Bill</string>
+    <string name="analysis_type">Analysis Type</string>
+    <string name="analyze">Analyze</string>
+    <string name="compare">Compare</string>
+    <string name="analysis_results">Analysis Results</string>
+    <string name="about_analysis_title">About Energy Analysis</string>
+    <string name="about_analysis_message">This tool helps you understand your energy usage patterns...</string>
+    <string name="menu">menu</string>
+
+    <string-array name="analysis_types">
+        <item>General Analysis</item>
+        <item>Cost Breakdown</item>
+        <item>Usage Patterns</item>
+        <item>Rate Analysis</item>
+        <item>Efficiency Tips</item>
+    </string-array>
+
+    <string-array name="analysis_type_values">
+        <item>general</item>
+        <item>cost_breakdown</item>
+        <item>usage_patterns</item>
+        <item>rate_analysis</item>
+        <item>efficiency_tips</item>
+    </string-array>
 </resources>

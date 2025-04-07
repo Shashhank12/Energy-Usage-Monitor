@@ -48,6 +48,8 @@ public class SettingsActivity extends AppCompatActivity implements NavigationVie
         binding = ActivitySettingsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        drawerLayout = binding.drawerLayout;
+
         setSupportActionBar(binding.toolbar);
         getSupportActionBar().setTitle("Settings Page");
 
@@ -92,6 +94,8 @@ public class SettingsActivity extends AppCompatActivity implements NavigationVie
             startActivity(new Intent(this, HomeDashboardActivity.class));
         }else if (id == R.id.nav_energy_monitor) {
             startActivity(new Intent(this, EnergyMonitorActivity.class));
+        } else if (id == R.id.nav_analysis) {
+            startActivity(new Intent(this, AnalysisActivity.class));
         } else if (id == R.id.nav_logout) {
             Toast.makeText(this, "Logging out...", Toast.LENGTH_SHORT).show();
 

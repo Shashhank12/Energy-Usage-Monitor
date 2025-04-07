@@ -62,6 +62,8 @@ public class ProfileActivity extends AppCompatActivity implements NavigationView
             startActivity(new Intent(this, HomeDashboardActivity.class));
         }else if (id == R.id.nav_energy_monitor) {
             startActivity(new Intent(this, EnergyMonitorActivity.class));
+        } else if (id == R.id.nav_analysis) {
+            startActivity(new Intent(this, AnalysisActivity.class));
         } else if (id == R.id.nav_logout) {
             Toast.makeText(this, "Logging out...", Toast.LENGTH_SHORT).show();
 

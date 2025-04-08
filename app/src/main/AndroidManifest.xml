@@ -81,6 +81,11 @@
             android:exported="true"
             android:label="Registration Page" />
 
+        <activity
+            android:name=".activities.EditProfileActivity"
+            android:exported="true"
+            android:label="Edit Profile" />
+
     </application>
 
 </manifest>

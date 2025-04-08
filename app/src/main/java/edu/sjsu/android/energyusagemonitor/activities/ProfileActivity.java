@@ -1,8 +1,11 @@
 package edu.sjsu.android.energyusagemonitor.activities;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -12,6 +15,7 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.material.navigation.NavigationView;
@@ -21,12 +25,17 @@ import edu.sjsu.android.energyusagemonitor.ui.login.LoginActivity;
 
 public class ProfileActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
+    private static final int EDIT_PROFILE_REQUEST = 1;
+
     private DrawerLayout drawerLayout;
+    private TextView firstNameText;
+    private TextView lastNameText;
+    private TextView emailText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_profile); // Ensure this matches your XML file
+        setContentView(R.layout.activity_profile);
 
         drawerLayout = findViewById(R.id.drawer_layout);
         if (drawerLayout == null) {
@@ -43,9 +52,43 @@ public class ProfileActivity extends AppCompatActivity implements NavigationView
                 this, drawerLayout, toolbar,
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close
         );
-
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
+
+        firstNameText = findViewById(R.id.first_name_text);
+        lastNameText = findViewById(R.id.last_name_text);
+        emailText = findViewById(R.id.email_text);
+
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        String savedFirst = prefs.getString("first_name", "First");
+        String savedLast = prefs.getString("last_name", "Last");
+        firstNameText.setText(savedFirst);
+        lastNameText.setText(savedLast);
+
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account != null && emailText != null) {
+            emailText.setText(account.getEmail());
+        }
+
+        Button editButton = findViewById(R.id.edit_button);
+        if (editButton != null) {
+            editButton.setOnClickListener(v -> {
+                Intent intent = new Intent(ProfileActivity.this, EditProfileActivity.class);
+                startActivityForResult(intent, EDIT_PROFILE_REQUEST);
+            });
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        String updatedFirst = prefs.getString("first_name", "First");
+        String updatedLast = prefs.getString("last_name", "Last");
+
+        if (firstNameText != null) firstNameText.setText(updatedFirst);
+        if (lastNameText != null) lastNameText.setText(updatedLast);
     }
 
     @Override
@@ -60,13 +103,12 @@ public class ProfileActivity extends AppCompatActivity implements NavigationView
             Toast.makeText(this, "No new notifications", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_home_dashboard) {
             startActivity(new Intent(this, HomeDashboardActivity.class));
-        }else if (id == R.id.nav_energy_monitor) {
+        } else if (id == R.id.nav_energy_monitor) {
             startActivity(new Intent(this, EnergyMonitorActivity.class));
         } else if (id == R.id.nav_analysis) {
             startActivity(new Intent(this, AnalysisActivity.class));
         } else if (id == R.id.nav_logout) {
             Toast.makeText(this, "Logging out...", Toast.LENGTH_SHORT).show();
-
             GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(this,
                     new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build());
 
@@ -90,5 +132,4 @@ public class ProfileActivity extends AppCompatActivity implements NavigationView
             super.onBackPressed();
         }
     }
-
 }

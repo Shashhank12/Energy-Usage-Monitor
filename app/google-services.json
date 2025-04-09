@@ -14,11 +14,35 @@
       },
       "oauth_client": [
         {
+          "client_id": "719288614761-1ma4tku7ld502u649h5vkegt1c42p8ur.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.sjsu.android.energyusagemonitor",
+            "certificate_hash": "7d16988692acd10b5875242c65d9d6ef508f7d5e"
+          }
+        },
+        {
           "client_id": "719288614761-d4bequvsjlduvj5aeh5apvjquv74osnr.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "edu.sjsu.android.energyusagemonitor",
             "certificate_hash": "5d228deb3eb7fd05c23a170a2dda01e474d12e68"
+          }
+        },
+        {
+          "client_id": "719288614761-fr5102cck255fsrebm1jt90nil9os8ug.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.sjsu.android.energyusagemonitor",
+            "certificate_hash": "6cec49811e083d5b58024ca43d43f7a4cfc0c006"
+          }
+        },
+        {
+          "client_id": "719288614761-trajlf21f8vokn60rnnf7up23j88318n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.sjsu.android.energyusagemonitor",
+            "certificate_hash": "9b590915c902a9e8907d74bb74b297c95550552f"
           }
         },
         {

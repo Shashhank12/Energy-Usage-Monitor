@@ -1,16 +1,28 @@
 package edu.sjsu.android.energyusagemonitor.activities;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import edu.sjsu.android.energyusagemonitor.R;
 
 public class EditProfileActivity extends AppCompatActivity {
+
     private EditText firstNameEdit, lastNameEdit;
+    private FirebaseFirestore db;
+    private String userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,22 +34,41 @@ public class EditProfileActivity extends AppCompatActivity {
         Button saveButton = findViewById(R.id.btn_save);
         Button cancelButton = findViewById(R.id.btn_cancel);
 
-        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-        String savedFirstName = prefs.getString("first_name", "");
-        String savedLastName = prefs.getString("last_name", "");
-        firstNameEdit.setText(savedFirstName);
-        lastNameEdit.setText(savedLastName);
+        db = FirebaseFirestore.getInstance();
+        userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
+        // Load current values
+        DocumentReference docRef = db.collection("users").document(userId);
+        docRef.get().addOnSuccessListener(doc -> {
+            if (doc.exists()) {
+                firstNameEdit.setText(doc.getString("firstName"));
+                lastNameEdit.setText(doc.getString("lastName"));
+            }
+        }).addOnFailureListener(e -> {
+            Log.e("Firestore", "Failed to fetch profile", e);
+            Toast.makeText(this, "Failed to load profile", Toast.LENGTH_SHORT).show();
+        });
+
+        // Save updates
         saveButton.setOnClickListener(v -> {
-            String newFirstName = firstNameEdit.getText().toString();
-            String newLastName = lastNameEdit.getText().toString();
+            String newFirstName = firstNameEdit.getText().toString().trim();
+            String newLastName = lastNameEdit.getText().toString().trim();
 
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putString("first_name", newFirstName);
-            editor.putString("last_name", newLastName);
-            editor.apply();
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("firstName", newFirstName);
+            updates.put("lastName", newLastName);
 
-            finish();
+            db.collection("users").document(userId)
+                    .set(updates, SetOptions.merge())
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d("Firestore", "Profile updated");
+                        Toast.makeText(this, "Profile updated successfully", Toast.LENGTH_SHORT).show();
+                        finish(); // Go back to ProfileActivity
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e("Firestore", "Update failed", e);
+                        Toast.makeText(this, "Failed to update profile", Toast.LENGTH_SHORT).show();
+                    });
         });
 
         cancelButton.setOnClickListener(v -> finish());

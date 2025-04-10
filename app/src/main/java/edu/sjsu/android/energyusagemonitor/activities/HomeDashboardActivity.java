@@ -2,6 +2,7 @@ package edu.sjsu.android.energyusagemonitor.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
@@ -15,18 +16,28 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.auth.FirebaseAuth;
+
+import java.util.Map;
 
 import edu.sjsu.android.energyusagemonitor.R;
+import edu.sjsu.android.energyusagemonitor.firestore.FirestoreCallback;
+import edu.sjsu.android.energyusagemonitor.firestore.FirestoreRepository;
+import edu.sjsu.android.energyusagemonitor.firestore.FirestoreSimpleCallback;
+import edu.sjsu.android.energyusagemonitor.firestore.TestUser;
 import edu.sjsu.android.energyusagemonitor.ui.login.LoginActivity;
 
 public class HomeDashboardActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private DrawerLayout drawerLayout;
+    private FirestoreRepository firestoreRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_dashboard);
+
+        firestoreRepository = new FirestoreRepository();
 
         drawerLayout = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
@@ -39,6 +50,52 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
+    }
+
+    private void createTestUser() {
+        TestUser user = new TestUser(FirebaseAuth.getInstance().getCurrentUser().getEmail(), "TestFirstName", "TestLastName");
+
+        firestoreRepository.addDocument("TestUser", FirebaseAuth.getInstance().getCurrentUser().getUid(), user, new FirestoreCallback<String>() {
+            @Override
+            public void onSuccess(String documentId) {}
+
+            @Override
+            public void onFailure(Exception e) {}
+        });
+    }
+
+    private TestUser currentUser;
+
+    private void getTestUser() {
+        firestoreRepository.getDocumentById("TestUser", FirebaseAuth.getInstance().getCurrentUser().getUid(), TestUser.class, new FirestoreCallback<TestUser>() {
+            @Override
+            public void onSuccess(TestUser testUser) {
+                Log.wtf("TestUser", "TestUser: " + testUser.getFirstName());
+                currentUser = testUser;
+            }
+
+            @Override
+            public void onFailure(Exception e) {}
+        });
+    }
+
+    private void updateTestUser() {
+        Map<String, Object> updates = Map.of(
+                "firstName", "UpdatedFirstName",
+                "lastName", "UpdatedLastName"
+        );
+
+        firestoreRepository.updateDocument("TestUser", FirebaseAuth.getInstance().getCurrentUser().getUid(), updates, new FirestoreSimpleCallback() {
+            @Override
+            public void onSuccess() {
+                Log.wtf("TestUser", "TestUser updated successfully");
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                Log.wtf("TestUser", "Failed to update TestUser: " + e.getMessage());
+            }
+        });
     }
 
     @Override

@@ -10,6 +10,7 @@
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_password">Password must be >5 characters</string>
     <string name="login_failed">"Login failed"</string>
+    <string name="registration_failed">"Registration failed"</string>
     <string name="navigation_drawer_open">Open Navigation Drawer</string>
     <string name="navigation_drawer_close">Close Navigation Drawer</string>
     <string name="login_title">LOGIN</string>
@@ -29,6 +30,10 @@
     <string name="about_analysis_title">About Energy Analysis</string>
     <string name="about_analysis_message">This tool helps you understand your energy usage patterns...</string>
     <string name="menu">menu</string>
+    <string name="confirm_password">"Confirm Password"</string>
+    <string name="password_no_match">"Passwords do not match"</string>
+    <string name="register_extra_text_2">Already have an account?</string>
+    <string name="login_here">Login here.</string>
 
     <string-array name="analysis_types">
         <item>General Analysis</item>

@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -18,7 +19,12 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.stream.*;
 
 import edu.sjsu.android.energyusagemonitor.R;
 import edu.sjsu.android.energyusagemonitor.firestore.FirestoreCallback;
@@ -26,11 +32,13 @@ import edu.sjsu.android.energyusagemonitor.firestore.FirestoreRepository;
 import edu.sjsu.android.energyusagemonitor.firestore.FirestoreSimpleCallback;
 import edu.sjsu.android.energyusagemonitor.firestore.TestUser;
 import edu.sjsu.android.energyusagemonitor.ui.login.LoginActivity;
+import edu.sjsu.android.energyusagemonitor.utilityapi.models.BillsResponse;
 
 public class HomeDashboardActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private DrawerLayout drawerLayout;
     private FirestoreRepository firestoreRepository;
+    public List<BillsResponse.Bill> bills;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +58,53 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
+
+        if(SettingsActivity.getBills().size()>0){
+            bills = SettingsActivity.getBills();
+
+            TextView energyUseText = findViewById(R.id.text_energy_use);
+            TextView energyCostText = findViewById(R.id.text_energy_cost);
+            TextView outlierText = findViewById(R.id.monthly_trend);
+
+            double energyUse = getEnergyUsePercentage();
+            double energyCost = getEnergyCostPercentage();
+            boolean isOutlier = isOutlier();
+
+            String energyUseTextStr;
+            if (energyUse > 0) {
+                energyUseTextStr = "Energy use is up " + String.format("%.2f", energyUse) + "%.";
+            } else if (energyUse < 0) {
+                energyUseTextStr = "Energy use is down " + String.format("%.2f", Math.abs(energyUse)) + "%.";
+            } else {
+                energyUseTextStr = "Energy use stayed the same.";
+            }
+
+            String energyCostTextStr;
+            if (energyCost > 0) {
+                energyCostTextStr = "Energy cost is up " + String.format("%.2f", energyCost) + "%.";
+            } else if (energyCost < 0) {
+                energyCostTextStr = "Energy cost is down " + String.format("%.2f", Math.abs(energyCost)) + "%.";
+            } else {
+                energyCostTextStr = "Energy cost stayed the same.";
+            }
+
+            energyUseText.setText(energyUseTextStr);
+            energyCostText.setText(energyCostTextStr);
+
+            if(isOutlier)
+            {
+                outlierText.setText("Your current monthly usage is trending upward. Consult Energy Analysis for advice on better savings!");
+            }
+            else
+            {
+                outlierText.setText("Your current monthly usage is trending downward. Congratulations! Consult Energy Analysis to save even more!");
+            }
+        }
+
+
+        TextView energySavingTip = findViewById(R.id.random_tip);
+        String randomTip = getRandomEnergySavingTip();
+        energySavingTip.setText("New Energy Saving Reminder: " + randomTip);
     }
 
     private void createTestUser() {
@@ -139,5 +194,71 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
         } else {
             super.onBackPressed();
         }
+    }
+
+    private double getEnergyUsePercentage()
+    {
+        BillsResponse.Bill firstBill = bills.get(0);
+        BillsResponse.Bill secondBill = bills.get(1);
+
+        double firstBillTotalKwh = firstBill.getBase().getBillTotalKwh();
+        double secondBillTotalKwh = secondBill.getBase().getBillTotalKwh();
+
+        if (secondBillTotalKwh == 0) {
+            return (firstBillTotalKwh == 0) ? 0 : (firstBillTotalKwh > 0 ? 100 : -100); // Handle division by zero (if second bill is 0)
+        }
+
+        double percentChange = ((firstBillTotalKwh - secondBillTotalKwh) / secondBillTotalKwh) * 100;
+
+        return percentChange;
+    }
+
+    private double getEnergyCostPercentage()
+    {
+        BillsResponse.Bill firstBill = bills.get(0);
+        BillsResponse.Bill secondBill = bills.get(1);
+
+        double firstBillTotalCost = firstBill.getBase().getBillTotalCost();
+        double secondBillTotalCost = secondBill.getBase().getBillTotalCost();
+
+        if (secondBillTotalCost == 0) {
+            return (firstBillTotalCost == 0) ? 0 : (firstBillTotalCost > 0 ? 100 : -100); // Handle division by zero (if second bill is 0)
+        }
+
+        double percentChange = ((firstBillTotalCost - secondBillTotalCost) / secondBillTotalCost) * 100;
+
+        return percentChange;
+    }
+
+    private boolean isOutlier()
+    {
+        double firstHalfAvg = IntStream.range(0, 6)
+                .mapToDouble(i -> bills.get(i).getBase().getBillTotalCost())
+                .average().orElse(0);
+
+        double secondHalfAvg = IntStream.range(6, 12)
+                .mapToDouble(i -> bills.get(i).getBase().getBillTotalCost())
+                .average().orElse(0);
+
+        return secondHalfAvg < firstHalfAvg;
+    }
+
+    private String getRandomEnergySavingTip() {
+        String[] tips = {
+                "Turn off lights when leaving a room.",
+                "Unplug chargers when not in use.",
+                "Use LED light bulbs.",
+                "Set your thermostat a few degrees lower in winter.",
+                "Wash clothes in cold water.",
+                "Use natural light during the day.",
+                "Seal windows and doors to prevent drafts.",
+                "Use a programmable thermostat.",
+                "Only run full loads in dishwasher and laundry.",
+                "Air-dry clothes when possible."
+        };
+
+        Random random = new Random();
+        int index = random.nextInt(tips.length);
+        return tips[index];
     }
 }

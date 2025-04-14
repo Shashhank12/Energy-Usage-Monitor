@@ -1,6 +1,16 @@
+import java.util.Properties
+import java.io.FileInputStream
+
+fun getApiKey(name: String): String {
+    val properties = Properties()
+    val inputStream = FileInputStream("local.properties")
+    properties.load(inputStream)
+    return properties.getProperty(name)
+}
+
 plugins {
     id("com.android.application")
-    id("com.google.gms.google-services") // ✅ Required for Firebase
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -14,6 +24,18 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "UTILITY_API_KEY",
+            "\"${getApiKey("UTILITY_API_KEY")}\""
+        )
+
+        buildConfigField(
+            "String",
+            "GEMINI_API_KEY",
+            "\"${getApiKey("GEMINI_API_KEY")}\""
+        )
     }
 
     buildTypes {
@@ -31,6 +53,7 @@ android {
     }
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 

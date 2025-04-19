@@ -26,7 +26,7 @@ import edu.sjsu.android.energyusagemonitor.ui.login.LoginActivity;
 public class ProfileActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private DrawerLayout drawerLayout;
-    private TextView firstNameText, lastNameText, emailText;
+    private TextView firstNameText, lastNameText, emailText, budgetText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +50,7 @@ public class ProfileActivity extends AppCompatActivity implements NavigationView
         firstNameText = findViewById(R.id.first_name_text);
         lastNameText = findViewById(R.id.last_name_text);
         emailText = findViewById(R.id.email_text);
+        budgetText = findViewById(R.id.budget_text);
 
         loadUserProfile();
 
@@ -77,6 +78,7 @@ public class ProfileActivity extends AppCompatActivity implements NavigationView
                             firstNameText.setText(doc.getString("firstName"));
                             lastNameText.setText(doc.getString("lastName"));
                             emailText.setText(doc.getString("email"));
+                            budgetText.setText(doc.getString("budget"));
                         }
                     })
                     .addOnFailureListener(e -> Toast.makeText(this, "Failed to load profile", Toast.LENGTH_SHORT).show());

@@ -45,7 +45,7 @@
                     android:id="@+id/text_energy_use"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Energy use is up/down x%. (Activate in Settings)"
+                    android:text="Monthly energy use is up/down x%. (Activate in Settings)"
                     android:textSize="18sp"
                     android:layout_marginTop="8dp"
                     android:textStyle="bold" />
@@ -54,7 +54,7 @@
                     android:id="@+id/text_energy_cost"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Energy cost is up/down y%. (Activate in Settings)"
+                    android:text="Monthly energy cost is up/down y%. (Activate in Settings)"
                     android:textSize="18sp"
                     android:layout_marginTop="4dp"
                     android:textStyle="bold" />
@@ -80,7 +80,7 @@
                     android:id="@+id/monthly_trend"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Your current monthly usage is ... (Activate in Settings)"
+                    android:text="Your average monthly usage is ... (Activate in Settings)"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -91,6 +91,12 @@
                     android:text="Simple Energy Saving Tip:"
                     android:textSize="16sp"
                     android:textStyle="bold" />
+
+                <com.github.mikephil.charting.charts.PieChart
+                    android:id="@+id/pieChart"
+                    android:layout_width="match_parent"
+                    android:layout_height="300dp"/>
+
             </LinearLayout>
         </ScrollView>
     </LinearLayout>

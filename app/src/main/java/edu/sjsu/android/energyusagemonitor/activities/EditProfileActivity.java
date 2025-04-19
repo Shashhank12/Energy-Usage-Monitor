@@ -20,7 +20,7 @@ import edu.sjsu.android.energyusagemonitor.R;
 
 public class EditProfileActivity extends AppCompatActivity {
 
-    private EditText firstNameEdit, lastNameEdit;
+    private EditText firstNameEdit, lastNameEdit, budgetEdit;
     private FirebaseFirestore db;
     private String userId;
 
@@ -31,6 +31,7 @@ public class EditProfileActivity extends AppCompatActivity {
 
         firstNameEdit = findViewById(R.id.edit_first_name);
         lastNameEdit = findViewById(R.id.edit_last_name);
+        budgetEdit = findViewById(R.id.edit_budget);
         Button saveButton = findViewById(R.id.btn_save);
         Button cancelButton = findViewById(R.id.btn_cancel);
 
@@ -43,6 +44,7 @@ public class EditProfileActivity extends AppCompatActivity {
             if (doc.exists()) {
                 firstNameEdit.setText(doc.getString("firstName"));
                 lastNameEdit.setText(doc.getString("lastName"));
+                budgetEdit.setText(doc.getString("budget"));
             }
         }).addOnFailureListener(e -> {
             Log.e("Firestore", "Failed to fetch profile", e);
@@ -53,10 +55,12 @@ public class EditProfileActivity extends AppCompatActivity {
         saveButton.setOnClickListener(v -> {
             String newFirstName = firstNameEdit.getText().toString().trim();
             String newLastName = lastNameEdit.getText().toString().trim();
+            String newBudget = budgetEdit.getText().toString().trim();
 
             Map<String, Object> updates = new HashMap<>();
             updates.put("firstName", newFirstName);
             updates.put("lastName", newLastName);
+            updates.put("budget", newBudget);
 
             db.collection("users").document(userId)
                     .set(updates, SetOptions.merge())

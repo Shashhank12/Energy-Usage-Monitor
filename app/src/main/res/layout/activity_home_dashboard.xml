@@ -71,7 +71,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Make sure to check your weekly energy bill!"
+                    android:text="Make sure to check your monthly energy bill!"
                     android:textSize="16sp"
                     android:layout_marginTop="8dp"
                     android:textStyle="bold" />

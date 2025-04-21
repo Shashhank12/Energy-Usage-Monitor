@@ -83,6 +83,10 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.generativeai)
 
+    //for photo picker
+    implementation ("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.16.0")
+
     // for markdown
     implementation(libs.core)
     implementation(libs.html)

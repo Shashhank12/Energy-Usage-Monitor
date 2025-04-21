@@ -51,8 +51,10 @@
                         android:layout_marginBottom="20dp"
                         android:contentDescription="Profile Picture"
                         android:background="@drawable/bordered_rounded"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/ic_profile_placeholder" />
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/ic_profile_placeholder"
+                        android:clickable="true"
+                        android:focusable="true" />
 
                     <TextView
                         android:layout_width="wrap_content"

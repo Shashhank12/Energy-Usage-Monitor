@@ -34,6 +34,21 @@
     <string name="password_no_match">"Passwords do not match"</string>
     <string name="register_extra_text_2">Already have an account?</string>
     <string name="login_here">Login here.</string>
+    <string name="come_back_to_this_app_and_tap_the_upload_pg_amp_e_zip_data_button_select_the_zip_file_you_just_downloaded_from_pg_amp_e"><![CDATA[Come back to this app and tap the \'Upload PG&E ZIP Data\' button. Select the ZIP file you just downloaded from PG&E.]]></string>
+    <string name="close">Close</string>
+    <string name="step_5_upload_the_zip_file_here">Step 5: Upload the ZIP File Here</string>
+    <string name="export_options">Export Options</string>
+    <string name="select_export_usage_for_a_range_of_days_then_choose_a_desired_time_period_max_is_1_year_period_choose_the_csv_format_and_click_export_this_downloads_a_zip_file">Select \'Export usage for a range of days\' Then choose a desired time period. (Max is 1 year period). Choose the CSV format and click Export. This downloads a ZIP file.</string>
+    <string name="step_4_select_date_range_amp_export"><![CDATA[Step 4: Select Date Range & Export]]></string>
+    <string name="download_my_data_button">Download My Data Button</string>
+    <string name="scroll_down_and_find_the_green_button_called_download_my_data">Scroll down and find the \'Green Button\' called \'Download My Data\'.</string>
+    <string name="step_3_find_download_my_data">Step 3: Find \'Download My Data\'</string>
+    <string name="pg_amp_e_usage_section"><![CDATA[PG&E Usage Section]]></string>
+    <string name="select_energy_usage_details_under_usage_rates_amp_savings"><![CDATA[Select \'Energy Usage Details\' under Usage, Rates & Savings]]></string>
+    <string name="step_2_navigate_to_energy_usage">Step 2: Navigate to Energy Usage</string>
+    <string name="pg_amp_e_login_screen"><![CDATA[PG&E Login Screen]]></string>
+    <string name="go_to_the_pg_amp_e_website_pge_com_and_log_in_to_your_account"><![CDATA[Go to the PG&E website (pge.com) and log in to your account.]]></string>
+    <string name="step_1_log_in_to_pg_amp_e"><![CDATA[Step 1: Log in to PG&E]]></string>
 
     <string-array name="analysis_types">
         <item>General Analysis</item>

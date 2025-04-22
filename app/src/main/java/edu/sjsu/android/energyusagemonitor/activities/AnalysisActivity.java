@@ -23,13 +23,19 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.material.navigation.NavigationView;
 
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+import edu.sjsu.android.energyusagemonitor.upload.PgeDataManager;
 import edu.sjsu.android.energyusagemonitor.R;
+import edu.sjsu.android.energyusagemonitor.upload.TimePeriodUsage;
 import edu.sjsu.android.energyusagemonitor.gemini.UtilityBillAnalyzer;
 import edu.sjsu.android.energyusagemonitor.ui.login.LoginActivity;
 import edu.sjsu.android.energyusagemonitor.utilityapi.models.BillsResponse.Bill;
@@ -40,9 +46,15 @@ import io.noties.markwon.html.HtmlPlugin;
 import io.noties.markwon.linkify.LinkifyPlugin;
 
 public class AnalysisActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+
+    private static final String TAG = "AnalysisActivity";
+
     private UtilityBillAnalyzer billAnalyzer;
-    private List<Bill> bills = new ArrayList<>();
     private DrawerLayout drawerLayout;
+    private PgeDataManager pgeDataManager;
+
+    private List<Bill> apiBills = new ArrayList<>();
+    private List<TimePeriodUsage> manualMonths = new ArrayList<>();
 
     private Spinner billSpinner;
     private Spinner analysisTypeSpinner;
@@ -50,8 +62,9 @@ public class AnalysisActivity extends AppCompatActivity implements NavigationVie
     private ProgressBar progressBar;
     private Markwon markwon;
 
-    private int selectedBillPosition = 0;
+    private int selectedItemPosition = 0;
     private String selectedAnalysisType = "general";
+    private PgeDataManager.DataSource currentDataSource;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +77,7 @@ public class AnalysisActivity extends AppCompatActivity implements NavigationVie
 
         androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle("Energy Analysis");
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar,
                 R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -83,9 +97,9 @@ public class AnalysisActivity extends AppCompatActivity implements NavigationVie
         progressBar = findViewById(R.id.progressBar);
 
         billAnalyzer = new UtilityBillAnalyzer();
+        pgeDataManager = PgeDataManager.getInstance();
 
-        loadBillData();
-
+        loadDataBasedOnSource();
         setupBillSpinner();
         setupAnalysisTypeSpinner();
 
@@ -93,33 +107,73 @@ public class AnalysisActivity extends AppCompatActivity implements NavigationVie
         findViewById(R.id.compareButton).setOnClickListener(v -> performComparison());
     }
 
-    private void loadBillData() {
-        try {
-            bills = SettingsActivity.getBills();
+    private void loadDataBasedOnSource() {
+        currentDataSource = PgeDataManager.getActiveDataSource();
+        Log.i(TAG, "Loading data for source: " + currentDataSource);
 
-            if (bills == null || bills.isEmpty()) {
-                Toast.makeText(this, "No bill data available", Toast.LENGTH_SHORT).show();
-                finish();
+        apiBills.clear();
+        manualMonths.clear();
+
+        if (currentDataSource == PgeDataManager.DataSource.MANUAL) {
+            manualMonths = pgeDataManager.getManualMonthlyUsage();
+            if (manualMonths == null || manualMonths.isEmpty()) {
+                showErrorAndFinish("No manual data available. Upload data in Settings.");
+            } else {
+                Collections.reverse(manualMonths);
             }
-        } catch (Exception e) {
-            Toast.makeText(this, "Error loading bill data", Toast.LENGTH_SHORT).show();
-            finish();
+        } else {
+            List<Bill> fetchedApiBills = SettingsActivity.getBills();
+            if (fetchedApiBills == null || fetchedApiBills.isEmpty()) {
+                showErrorAndFinish("No API/Demo data available. Connect in Settings.");
+            } else {
+                apiBills = new ArrayList<>(fetchedApiBills);
+                Collections.reverse(apiBills);
+            }
         }
     }
 
+    private void showErrorAndFinish(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    }
+
     private void setupBillSpinner() {
-        List<String> billDisplayStrings = new ArrayList<>();
-        for (Bill bill : bills) {
-            String displayString = formatDateShort(bill.getBase().getBillStartDate()) + " to " +
-                    formatDateShort(bill.getBase().getBillEndDate()) + " - $" +
-                    bill.getBase().getBillTotalCost();
-            billDisplayStrings.add(displayString);
+        List<String> displayStrings = new ArrayList<>();
+
+        if (currentDataSource == PgeDataManager.DataSource.MANUAL) {
+            for (TimePeriodUsage month : manualMonths) {
+                if (month == null) continue;
+                String start = formatDateSafe(month.getPeriodStart());
+                String end = formatDateSafe(month.getPeriodEnd());
+                String displayString = start + " to " + end + " - $" +
+                        String.format(Locale.US, "%.2f", month.getTotalCost());
+                displayStrings.add(displayString);
+            }
+        } else {
+            for (Bill bill : apiBills) {
+                if (bill == null || bill.getBase() == null) continue;
+                String start = formatDateSafe(bill.getBase().getBillStartDate());
+                String end = formatDateSafe(bill.getBase().getBillEndDate());
+                String displayString = start + " to " + end + " - $" +
+                        String.format(Locale.US, "%.2f", bill.getBase().getBillTotalCost());
+                displayStrings.add(displayString);
+            }
+        }
+
+
+        if (displayStrings.isEmpty()){
+            Log.w(TAG, "No items to display in bill spinner.");
+            displayStrings.add("No Data Available");
+            findViewById(R.id.analyzeButton).setEnabled(false);
+            findViewById(R.id.compareButton).setEnabled(false);
+        } else {
+            findViewById(R.id.analyzeButton).setEnabled(true);
+            findViewById(R.id.compareButton).setEnabled(true);
         }
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this,
                 R.layout.spinner_item,
-                billDisplayStrings
+                displayStrings
         );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         billSpinner.setAdapter(adapter);
@@ -127,48 +181,46 @@ public class AnalysisActivity extends AppCompatActivity implements NavigationVie
         billSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                selectedBillPosition = position;
+                int dataSize = (currentDataSource == PgeDataManager.DataSource.MANUAL) ? manualMonths.size() : apiBills.size();
+                if (position >= 0 && position < dataSize) {
+                    selectedItemPosition = position;
+                } else {
+                    selectedItemPosition = -1;
+                }
             }
-
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
+                selectedItemPosition = -1;
             }
         });
     }
 
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.nav_profile) {
-            startActivity(new Intent(this, ProfileActivity.class));
-        } else if (id == R.id.nav_settings) {
-            startActivity(new Intent(this, SettingsActivity.class));
-        } else if (id == R.id.nav_notifications) {
-            Toast.makeText(this, "No new notifications", Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.nav_home_dashboard) {
-            startActivity(new Intent(this, HomeDashboardActivity.class));
-        } else if (id == R.id.nav_energy_monitor) {
-            startActivity(new Intent(this, EnergyMonitorActivity.class));
-        } else if (id == R.id.nav_analysis) {
-            startActivity(new Intent(this, AnalysisActivity.class));
-        } else if (id == R.id.nav_logout) {
-            Toast.makeText(this, "Logging out...", Toast.LENGTH_SHORT).show();
-
-            GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(this,
-                    new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build());
-
-            googleSignInClient.signOut().addOnCompleteListener(task -> {
-                Intent intent = new Intent(AnalysisActivity.this, LoginActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-                finish();
-            });
+    private String formatDateSafe(LocalDateTime dateTime) {
+        if (dateTime == null) return "N/A";
+        try {
+            return dateTime.format(DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.getDefault()));
+        } catch (Exception e) {
+            Log.w(TAG, "Failed to format LocalDateTime: " + dateTime);
+            return "Invalid Date";
         }
-
-        drawerLayout.closeDrawer(GravityCompat.START);
-        return true;
     }
+
+    private String formatDateSafe(String dateString) {
+        if (dateString == null || dateString.equals("N/A")) return "N/A";
+        try {
+            LocalDateTime dateTime = LocalDateTime.parse(dateString, DateTimeFormatter.ISO_DATE_TIME);
+            return dateTime.format(DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.getDefault()));
+        } catch (DateTimeParseException e1) {
+            try {
+                LocalDate date = LocalDate.parse(dateString.substring(0, 10), DateTimeFormatter.ISO_LOCAL_DATE);
+                return date.format(DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.getDefault()));
+            } catch (Exception e2) {
+                Log.w(TAG, "Failed to parse Date String: " + dateString);
+                return dateString.split("T")[0];
+            }
+        }
+    }
+
 
     private void setupAnalysisTypeSpinner() {
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
@@ -185,25 +237,23 @@ public class AnalysisActivity extends AppCompatActivity implements NavigationVie
                 String[] values = getResources().getStringArray(R.array.analysis_type_values);
                 selectedAnalysisType = values[position];
             }
-
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
+                selectedAnalysisType = "general";
             }
         });
     }
 
     private void performAnalysis() {
-        if (bills.isEmpty()) {
-            Toast.makeText(this, "No bill data available", Toast.LENGTH_SHORT).show();
+        if (selectedItemPosition < 0) {
+            Toast.makeText(this, "No period selected or data unavailable", Toast.LENGTH_SHORT).show();
             return;
         }
 
         progressBar.setVisibility(View.VISIBLE);
         resultTextView.setText("");
 
-        Bill selectedBill = bills.get(selectedBillPosition);
-
-        billAnalyzer.analyzeBill(selectedBill, selectedAnalysisType, new UtilityBillAnalyzer.AnalysisCallback() {
+        UtilityBillAnalyzer.AnalysisCallback callback = new UtilityBillAnalyzer.AnalysisCallback() {
             @Override
             public void onSuccess(String analysisResult) {
                 runOnUiThread(() -> {
@@ -211,7 +261,6 @@ public class AnalysisActivity extends AppCompatActivity implements NavigationVie
                     markwon.setMarkdown(resultTextView, analysisResult);
                 });
             }
-
             @Override
             public void onError(String errorMessage) {
                 runOnUiThread(() -> {
@@ -219,57 +268,109 @@ public class AnalysisActivity extends AppCompatActivity implements NavigationVie
                     resultTextView.setText("Error: " + errorMessage);
                 });
             }
-        });
+        };
+
+        if (currentDataSource == PgeDataManager.DataSource.MANUAL) {
+            if (selectedItemPosition >= manualMonths.size()) {
+                Toast.makeText(this, "Selection out of bounds for manual data", Toast.LENGTH_SHORT).show();
+                progressBar.setVisibility(View.GONE); return;
+            }
+            TimePeriodUsage selectedMonth = manualMonths.get(selectedItemPosition);
+            billAnalyzer.analyzeManualUsage(selectedMonth, selectedAnalysisType, callback);
+        } else {
+            if (selectedItemPosition >= apiBills.size()) {
+                Toast.makeText(this, "Selection out of bounds for API data", Toast.LENGTH_SHORT).show();
+                progressBar.setVisibility(View.GONE); return;
+            }
+            Bill selectedBill = apiBills.get(selectedItemPosition);
+            billAnalyzer.analyzeBill(selectedBill, selectedAnalysisType, callback);
+        }
     }
 
     private void performComparison() {
-        if (bills.size() < 2) {
-            Toast.makeText(this, "Need at least 2 bills for comparison", Toast.LENGTH_SHORT).show();
+        int dataSize = (currentDataSource == PgeDataManager.DataSource.MANUAL) ? manualMonths.size() : apiBills.size();
+
+        if (dataSize < 2) {
+            Toast.makeText(this, "Need at least 2 periods for comparison", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (selectedItemPosition < 0 || selectedItemPosition >= dataSize) {
+            Toast.makeText(this, "Invalid period selected", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        int previousItemIndex = selectedItemPosition + 1;
+        if (previousItemIndex >= dataSize) {
+            Toast.makeText(this, "Cannot compare the oldest period", Toast.LENGTH_SHORT).show();
             return;
         }
 
         progressBar.setVisibility(View.VISIBLE);
         resultTextView.setText("");
 
-        Bill currentBill = bills.get(selectedBillPosition);
-        Bill previousBill = bills.get(Math.min(selectedBillPosition + 1, bills.size() - 1));
-
-        billAnalyzer.compareBills(currentBill, previousBill, new UtilityBillAnalyzer.AnalysisCallback() {
+        UtilityBillAnalyzer.AnalysisCallback callback = new UtilityBillAnalyzer.AnalysisCallback() {
             @Override
-            public void onSuccess(String analysisResult) {
-                runOnUiThread(() -> {
-                    progressBar.setVisibility(View.GONE);
-                    markwon.setMarkdown(resultTextView, analysisResult);
-                });
-            }
-
+            public void onSuccess(String analysisResult) { runOnUiThread(() -> { progressBar.setVisibility(View.GONE); markwon.setMarkdown(resultTextView, analysisResult); }); }
             @Override
-            public void onError(String errorMessage) {
-                runOnUiThread(() -> {
-                    progressBar.setVisibility(View.GONE);
-                    resultTextView.setText("Error: " + errorMessage);
-                });
-            }
-        });
+            public void onError(String errorMessage) { runOnUiThread(() -> { progressBar.setVisibility(View.GONE); resultTextView.setText("Error: " + errorMessage); }); }
+        };
+
+        if (currentDataSource == PgeDataManager.DataSource.MANUAL) {
+            TimePeriodUsage currentMonth = manualMonths.get(selectedItemPosition);
+            TimePeriodUsage previousMonth = manualMonths.get(previousItemIndex);
+            billAnalyzer.compareManualUsage(currentMonth, previousMonth, callback);
+        } else {
+            Bill currentBill = apiBills.get(selectedItemPosition);
+            Bill previousBill = apiBills.get(previousItemIndex);
+            billAnalyzer.compareBills(currentBill, previousBill, callback);
+        }
     }
 
-    private String formatDateShort(String apiDate) {
-        try {
-            if (apiDate.matches("\\d{4}-\\d{4}T.*")) {
-                String correctedDate = apiDate.substring(0, 5) + "-" + apiDate.substring(5, 7) + apiDate.substring(7);
-                apiDate = correctedDate;
-            }
 
-            if (apiDate.matches(".*\\.\\d{7}[-+]\\d{2}:\\d{2}")) {
-                apiDate = apiDate.replaceAll("(\\.\\d{6})\\d([-+]\\d{2}:\\d{2})", "$1$2");
-            }
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
 
-            SimpleDateFormat apiFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.getDefault());
-            Date date = apiFormat.parse(apiDate);
-            return new SimpleDateFormat("MMM dd", Locale.getDefault()).format(date);
-        } catch (Exception e) {
-            Log.e("DateParsing", "Failed to parse date: " + apiDate, e);
-            return apiDate.split("T")[0];
+        if (id == R.id.nav_profile) {
+            startActivity(new Intent(this, ProfileActivity.class));
+        } else if (id == R.id.nav_settings) {
+            startActivity(new Intent(this, SettingsActivity.class));
+        } else if (id == R.id.nav_notifications) {
+            Toast.makeText(this, "No new notifications", Toast.LENGTH_SHORT).show();
+        } else if (id == R.id.nav_home_dashboard) {
+            startActivity(new Intent(this, HomeDashboardActivity.class));
+        } else if (id == R.id.nav_energy_monitor) {
+            startActivity(new Intent(this, EnergyMonitorActivity.class));
+        } else if (id == R.id.nav_logout) {
+            Toast.makeText(this, "Logging out...", Toast.LENGTH_SHORT).show();
+
+            GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(this,
+                    new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build());
+
+            googleSignInClient.signOut().addOnCompleteListener(task -> {
+                if (pgeDataManager != null) {
+                    pgeDataManager.clearManualData();
+                }
+                SettingsActivity.getBills().clear();
+                PgeDataManager.setActiveDataSource(PgeDataManager.DataSource.API);
+
+                Intent intent = new Intent(AnalysisActivity.this, LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            });
+        }
+
+        drawerLayout.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
         }
     }
 }

@@ -98,6 +98,11 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 
+    testImplementation ("junit:junit:4.13.2")
+    testImplementation ("org.mockito:mockito-core:5.8.0")
+    testImplementation ("androidx.test:core:1.5.0")
+
+
     apply(plugin = "com.google.gms.google-services")
 }
 

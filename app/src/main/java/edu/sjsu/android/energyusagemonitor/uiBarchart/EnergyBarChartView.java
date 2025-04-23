@@ -85,12 +85,28 @@ public class EnergyBarChartView extends BarChart {
         boolean isDarkMode = (getResources().getConfiguration().uiMode &
                 Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
 
-        int barColor = isDarkMode ?
-                ContextCompat.getColor(getContext(), R.color.primary_dark) :
-                ContextCompat.getColor(getContext(), R.color.primary_light);
+        Context context = getContext();
 
-        dataSet.setColor(barColor);
-        dataSet.setValueTextColor(barColor);
-        dataSet.setValueTextSize(16f);
+        int[] colors = new int[] {
+                ContextCompat.getColor(context, R.color.chart_red),
+                ContextCompat.getColor(context, R.color.chart_blue),
+                ContextCompat.getColor(context, R.color.chart_green),
+                ContextCompat.getColor(context, R.color.chart_orange),
+                ContextCompat.getColor(context, R.color.chart_purple),
+                ContextCompat.getColor(context, R.color.chart_teal)
+        };
+
+        List<Integer> barColors = new ArrayList<>();
+        for (int i = 0; i < dataSet.getEntryCount(); i++) {
+            barColors.add(colors[i % colors.length]);  // cycle through colors
+        }
+
+        dataSet.setColors(barColors);
+        dataSet.setValueTextColor(isDarkMode ?
+                ContextCompat.getColor(context, R.color.on_background_dark) :
+                ContextCompat.getColor(context, R.color.on_background_light)
+        );
+        dataSet.setValueTextSize(14f);
     }
+
 }

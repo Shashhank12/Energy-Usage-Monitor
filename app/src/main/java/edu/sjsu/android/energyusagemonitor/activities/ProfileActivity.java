@@ -95,6 +95,28 @@ public class ProfileActivity extends AppCompatActivity implements NavigationView
 
         Button editButton = findViewById(R.id.edit_button);
         editButton.setOnClickListener(v -> startActivity(new Intent(this, EditProfileActivity.class)));
+
+        Button deleteButton = findViewById(R.id.delete_account_button);
+        deleteButton.setOnClickListener(v -> {
+            if (user != null) {
+                // Delete Firestore user document first
+                db.collection("users").document(user.getUid()).delete()
+                        .addOnSuccessListener(aVoid -> {
+                            // Now delete FirebaseAuth account
+                            user.delete()
+                                    .addOnSuccessListener(aVoid2 -> {
+                                        Toast.makeText(ProfileActivity.this, "Account deleted successfully", Toast.LENGTH_LONG).show();
+                                        Intent intent = new Intent(ProfileActivity.this, LoginActivity.class);
+                                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                        startActivity(intent);
+                                        finish();
+                                    })
+                                    .addOnFailureListener(e -> Toast.makeText(ProfileActivity.this, "Failed to delete account", Toast.LENGTH_SHORT).show());
+                        })
+                        .addOnFailureListener(e -> Toast.makeText(ProfileActivity.this, "Failed to remove user data", Toast.LENGTH_SHORT).show());
+            }
+        });
+
     }
 
     @Override

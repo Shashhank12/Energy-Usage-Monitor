@@ -95,7 +95,6 @@
                         android:textStyle="bold"
                         android:layout_marginBottom="12dp" />
 
-
                     <TextView
                         android:id="@+id/email_text"
                         android:layout_width="wrap_content"
@@ -105,16 +104,29 @@
                         android:layout_marginTop="8dp"
                         android:layout_gravity="center_horizontal"/>
 
-                    <Button
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/edit_button"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="EDIT"
                         android:textAllCaps="true"
                         android:textColor="@android:color/white"
-                        android:background="@drawable/rounded_button"
+                        app:cornerRadius="24dp"
+                        app:backgroundTint="@color/purple_500"
                         android:layout_marginTop="24dp"
                         android:layout_marginBottom="40dp"
+                        android:padding="12dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/delete_account_button"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="DELETE ACCOUNT"
+                        android:textAllCaps="true"
+                        android:textColor="@android:color/white"
+                        app:cornerRadius="24dp"
+                        app:backgroundTint="@color/red_500"
+                        android:layout_marginTop="12dp"
                         android:padding="12dp" />
 
                 </LinearLayout>

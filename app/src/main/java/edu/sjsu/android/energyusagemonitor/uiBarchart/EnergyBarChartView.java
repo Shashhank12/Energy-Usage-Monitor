@@ -28,6 +28,7 @@ public class EnergyBarChartView extends BarChart {
     private void initChart(Context context) {
         getLegend().setEnabled(false);
         getAxisLeft().setGranularity(1f);
+        getAxisLeft().setAxisMinimum(0f);
         getAxisRight().setEnabled(false);
 
         setDrawGridBackground(false);

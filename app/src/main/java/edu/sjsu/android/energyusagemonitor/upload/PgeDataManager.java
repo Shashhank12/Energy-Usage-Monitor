@@ -70,6 +70,11 @@ public class PgeDataManager {
         activeDataSource = source;
     }
 
+    // Only for test purposes
+    public static void setInstance(PgeDataManager mockInstance) {
+        instance = mockInstance;
+    }
+
     public void loadDataFromZip(Context context, Uri zipUri, Runnable onComplete, Runnable onError) {
         executor.execute(() -> {
             synchronized (manualEnergyData) {

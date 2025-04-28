@@ -210,8 +210,6 @@ public class SettingsActivity extends AppCompatActivity implements NavigationVie
         if (id == R.id.nav_profile) {
             startActivity(new Intent(this, ProfileActivity.class));
         } else if (id == R.id.nav_settings) {
-        } else if (id == R.id.nav_notifications) {
-            Toast.makeText(this, "No new notifications", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_home_dashboard) {
             startActivity(new Intent(this, HomeDashboardActivity.class));
         } else if (id == R.id.nav_energy_monitor) {

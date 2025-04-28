@@ -350,8 +350,6 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
             startActivity(new Intent(this, ProfileActivity.class));
         } else if (id == R.id.nav_settings) {
             startActivity(new Intent(this, SettingsActivity.class));
-        } else if (id == R.id.nav_notifications) {
-            Toast.makeText(this, "No new notifications", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.nav_energy_monitor) {
             startActivity(new Intent(this, EnergyMonitorActivity.class));
         } else if (id == R.id.nav_analysis) {

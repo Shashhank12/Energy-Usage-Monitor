@@ -72,10 +72,6 @@
             android:name=".activities.EnergyMonitorActivity"
             android:exported="true"
             android:label="Energy Monitor Page" />
-        <activity
-            android:name=".activities.NotificationsActivity"
-            android:exported="false"
-            android:label="Notifications Page" />
 
         <activity
             android:name=".activities.RegisterActivity"

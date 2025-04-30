@@ -54,17 +54,30 @@ public class LoginActivity extends AppCompatActivity {
             mAuth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this, task -> {
                         if (task.isSuccessful()) {
-                            goToHome();
-                        } else {
-                            mAuth.createUserWithEmailAndPassword(email, password)
-                                    .addOnCompleteListener(this, regTask -> {
-                                        if (regTask.isSuccessful()) {
-                                            goToHome();
-                                        } else {
-                                            showLoginFailed(R.string.login_failed);
-                                        }
-                                    });
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            if (user != null) {
+                                user.reload().addOnCompleteListener(reload -> {
+                                    if (user.isEmailVerified()) {
+                                        goToHome();
+                                    }
+                                    else {
+                                        mAuth.signOut();
+                                        showLoginFailed(R.string.not_verified);
+                                    }
+                                });
+                            }
+
                         }
+//                        else {
+//                            mAuth.createUserWithEmailAndPassword(email, password)
+//                                    .addOnCompleteListener(this, regTask -> {
+//                                        if (regTask.isSuccessful()) {
+//                                            goToHome();
+//                                        } else {
+//                                            showLoginFailed(R.string.login_failed);
+//                                        }
+//                                    });
+//                        }
                     });
         });
 

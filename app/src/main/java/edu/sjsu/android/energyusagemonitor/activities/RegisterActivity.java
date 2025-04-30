@@ -72,7 +72,9 @@ public class RegisterActivity extends AppCompatActivity {
                                         // Registration successful, move to HomeDashboardActivity
                                         FirebaseUser user = mAuth.getCurrentUser();
                                         if (user != null) {
-                                            Intent intent = new Intent(RegisterActivity.this, HomeDashboardActivity.class);
+                                            user.sendEmailVerification();
+                                            mAuth.signOut();
+                                            Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
                                             startActivity(intent);
                                             finish();
                                         }

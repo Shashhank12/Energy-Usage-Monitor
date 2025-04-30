@@ -129,6 +129,7 @@ public class LoginActivity extends AppCompatActivity {
                 profile.put("firstName", names.length > 0 ? names[0] : "");
                 profile.put("lastName", names.length > 1 ? names[1] : "");
                 profile.put("email", account.getEmail());
+                profile.put("budget", "250");
 
                 docRef.set(profile, SetOptions.merge());
             }

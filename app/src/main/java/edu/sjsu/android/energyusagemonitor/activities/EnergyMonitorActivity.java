@@ -28,6 +28,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.commons.math3.stat.regression.SimpleRegression;
+
 import edu.sjsu.android.energyusagemonitor.upload.PgeDataManager;
 import edu.sjsu.android.energyusagemonitor.R;
 import edu.sjsu.android.energyusagemonitor.upload.TimePeriodUsage;
@@ -223,6 +225,41 @@ public class EnergyMonitorActivity extends AppCompatActivity implements Navigati
 
         prevBtn.setEnabled(currentPage > 0);
         nextBtn.setEnabled(currentPage < totalPages - 1);
+
+        double predictedMonthlyCost = predictMonthlyCost();
+        Log.d("REGRESSION", String.valueOf(predictedMonthlyCost));
+    }
+
+    private double predictMonthlyCost() {
+        List<Float> dataValues = new ArrayList<>();
+
+        if (currentDataSource == PgeDataManager.DataSource.MANUAL) {
+            for (int i = 0; i < paginatedManualMonths.size(); ++i) {
+                List<TimePeriodUsage> pageData = paginatedManualMonths.get(i);
+                for (TimePeriodUsage monthData : pageData) {
+                    if (monthData == null) continue;
+                    float value = (float) monthData.getTotalCost();
+                    dataValues.add(value);
+                }
+            }
+        }
+        else {
+            for (int i = 0; i < paginatedApiBills.size(); ++i) {
+                List<BillsResponse.Bill> pageData = paginatedApiBills.get(i);
+                for (BillsResponse.Bill bill : pageData) {
+                    if (bill == null || bill.getBase() == null) continue;
+                    float value = (float) bill.getBase().getBillTotalCost();
+                    dataValues.add(value);
+                }
+            }
+        }
+
+        SimpleRegression regression = new SimpleRegression();
+        for (int i = 0; i < dataValues.size(); ++i) {
+            regression.addData(i, dataValues.get(i));
+        }
+
+        return regression.predict(dataValues.size());
     }
 
 

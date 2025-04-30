@@ -102,6 +102,8 @@ dependencies {
     testImplementation ("org.mockito:mockito-core:5.8.0")
     testImplementation ("androidx.test:core:1.5.0")
 
+    // for linear regression
+    implementation ("org.apache.commons:commons-math3:3.6.1")
 
     apply(plugin = "com.google.gms.google-services")
 }

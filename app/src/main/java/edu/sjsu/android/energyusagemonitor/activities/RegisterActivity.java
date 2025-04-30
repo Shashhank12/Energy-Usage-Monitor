@@ -2,6 +2,8 @@ package edu.sjsu.android.energyusagemonitor.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -35,6 +37,24 @@ public class RegisterActivity extends AppCompatActivity {
         final EditText passwordEditText = findViewById(R.id.password_register);
         final EditText passwordEditText2 = findViewById(R.id.password_register2);
 
+
+        passwordEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                // empty
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                // empty
+            }
+        });
+
         mAuth = FirebaseAuth.getInstance();
 
         registerButton.setOnClickListener(new View.OnClickListener() {
@@ -43,7 +63,7 @@ public class RegisterActivity extends AppCompatActivity {
                 String username = usernameEditText.getText().toString();
                 String password = passwordEditText.getText().toString();
                 String password2 = passwordEditText2.getText().toString();
-                if (password.equals(password2)) {
+                if (password.equals(password2) && meetsPWRequirements(password)) {
                     mAuth.createUserWithEmailAndPassword(username, password)
                             .addOnCompleteListener(RegisterActivity.this, new OnCompleteListener<AuthResult>() {
                                 @Override
@@ -71,6 +91,11 @@ public class RegisterActivity extends AppCompatActivity {
         loginHereButton.setOnClickListener(v -> {
             startActivity(new Intent(this, LoginActivity.class));
         });
+    }
+
+    private boolean meetsPWRequirements(String pw) {
+        String requirements = "^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[^$*.{}()?!@#%&,><':;|`]).{13,}$";
+        return pw.matches(requirements);
     }
 
     private void showRegistrationFailed(@StringRes int errorString) {

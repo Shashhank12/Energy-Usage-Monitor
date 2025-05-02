@@ -64,6 +64,7 @@ public class LoginActivity extends AppCompatActivity {
             mAuth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this, task -> {
                         if (task.isSuccessful()) {
+                            Log.d("2FA", "signin success");
                             FirebaseUser user = mAuth.getCurrentUser();
                             if (user != null) {
                                 user.reload().addOnCompleteListener(reload -> {
@@ -78,19 +79,9 @@ public class LoginActivity extends AppCompatActivity {
                             }
                         }
                         else {
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            if (user != null) {
-                                user.reload().addOnCompleteListener(reload -> {
-                                    if (user.isEmailVerified()) {
-                                        Log.d("2FA", "entering 2FA");
-                                        check2FA(task);
-                                    }
-                                    else {
-                                        mAuth.signOut();
-                                        showLoginFailed(R.string.not_verified);
-                                    }
-                                });
-                            }
+                            Log.d("2FA", "signin fail");
+                            Log.d("2FA", "entering 2FA");
+                            check2FA(task);
                         }
                     });
         });
@@ -151,8 +142,15 @@ public class LoginActivity extends AppCompatActivity {
                 multiFactorResolver.resolveSignIn(multiFactorAssertion)
                         .addOnCompleteListener(resolveTask -> {
                             if (resolveTask.isSuccessful()) {
-                                goToHome();
-                                dialogInterface.dismiss();
+                                FirebaseUser user = mAuth.getCurrentUser();
+                                if (user != null) {
+                                    user.reload().addOnCompleteListener(reload -> {
+                                        if (user.isEmailVerified()) {
+                                            goToHome();
+                                            dialogInterface.dismiss();
+                                        }
+                                    });
+                                }
                             }
                             else {
                                 mAuth.signOut();

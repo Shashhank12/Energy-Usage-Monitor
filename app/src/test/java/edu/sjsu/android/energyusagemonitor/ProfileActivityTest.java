@@ -19,24 +19,16 @@ import java.util.Map;
 
 public class ProfileActivityTest {
 
-    @Mock
-    FirebaseFirestore mockFirestore;
-
-    @Mock
-    FirebaseUser mockUser;
-
-    @Mock
-    CollectionReference mockCollectionRef;
-
-    @Mock
-    DocumentReference mockDocRef;
+    @Mock private FirebaseFirestore mockFirestore;
+    @Mock private FirebaseUser mockUser;
+    @Mock private CollectionReference mockCollectionRef;
+    @Mock private DocumentReference mockDocRef;
 
     private final String testUid = "testUser123";
 
     @Before
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-
         when(mockUser.getUid()).thenReturn(testUid);
         when(mockFirestore.collection("users")).thenReturn(mockCollectionRef);
         when(mockCollectionRef.document(testUid)).thenReturn(mockDocRef);
@@ -50,14 +42,12 @@ public class ProfileActivityTest {
         updates.put("profilePic", fakeUri);
 
         mockDocRef.update(updates);
-
         verify(mockDocRef, times(1)).update(updates);
     }
 
     @Test
     public void testUserProfileFieldsFetched() {
         DocumentSnapshot mockSnapshot = mock(DocumentSnapshot.class);
-
         when(mockSnapshot.exists()).thenReturn(true);
         when(mockSnapshot.getString("firstName")).thenReturn("Jane");
         when(mockSnapshot.getString("lastName")).thenReturn("Doe");
@@ -72,9 +62,28 @@ public class ProfileActivityTest {
     @Test
     public void testUserProfileSnapshotDoesNotExist() {
         DocumentSnapshot mockSnapshot = mock(DocumentSnapshot.class);
-
         when(mockSnapshot.exists()).thenReturn(false);
 
         assertFalse(mockSnapshot.exists());
+    }
+
+    @Test
+    public void testUserUidIsNull() {
+        FirebaseUser nullUidUser = mock(FirebaseUser.class);
+        when(nullUidUser.getUid()).thenReturn(null);
+        assertNull(nullUidUser.getUid());
+    }
+
+    @Test
+    public void testEmptyFieldsInSnapshot() {
+        DocumentSnapshot mockSnapshot = mock(DocumentSnapshot.class);
+        when(mockSnapshot.exists()).thenReturn(true);
+        when(mockSnapshot.getString("firstName")).thenReturn(null);
+        when(mockSnapshot.getString("lastName")).thenReturn(null);
+        when(mockSnapshot.getString("email")).thenReturn(null);
+
+        assertNull(mockSnapshot.getString("firstName"));
+        assertNull(mockSnapshot.getString("lastName"));
+        assertNull(mockSnapshot.getString("email"));
     }
 }

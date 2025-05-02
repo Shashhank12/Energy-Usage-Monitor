@@ -1,7 +1,12 @@
 package edu.sjsu.android.energyusagemonitor.ui.login;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.InputType;
+import android.util.Log;
+import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -11,6 +16,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.gms.auth.api.signin.*;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseException;
+import com.google.firebase.FirebaseTooManyRequestsException;
 import com.google.firebase.auth.*;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -18,6 +25,8 @@ import com.google.firebase.firestore.SetOptions;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import edu.sjsu.android.energyusagemonitor.R;
 import edu.sjsu.android.energyusagemonitor.activities.HomeDashboardActivity;
@@ -51,6 +60,7 @@ public class LoginActivity extends AppCompatActivity {
             String password = binding.password.getText().toString();
             binding.loading.setVisibility(ProgressBar.VISIBLE);
 
+
             mAuth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this, task -> {
                         if (task.isSuccessful()) {
@@ -66,24 +76,118 @@ public class LoginActivity extends AppCompatActivity {
                                     }
                                 });
                             }
-
                         }
-//                        else {
-//                            mAuth.createUserWithEmailAndPassword(email, password)
-//                                    .addOnCompleteListener(this, regTask -> {
-//                                        if (regTask.isSuccessful()) {
-//                                            goToHome();
-//                                        } else {
-//                                            showLoginFailed(R.string.login_failed);
-//                                        }
-//                                    });
-//                        }
+                        else {
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            if (user != null) {
+                                user.reload().addOnCompleteListener(reload -> {
+                                    if (user.isEmailVerified()) {
+                                        Log.d("2FA", "entering 2FA");
+                                        check2FA(task);
+                                    }
+                                    else {
+                                        mAuth.signOut();
+                                        showLoginFailed(R.string.not_verified);
+                                    }
+                                });
+                            }
+                        }
                     });
         });
 
         binding.register.setOnClickListener(v -> {
             startActivity(new Intent(this, RegisterActivity.class));
         });
+    }
+
+    private PhoneAuthProvider.ForceResendingToken forceResendingToken;
+    private String verificationId;
+    private String verificationCode;
+    private PhoneAuthCredential credential;
+
+    private PhoneAuthProvider.OnVerificationStateChangedCallbacks callbacks =
+            new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+
+                @Override
+                public void onVerificationCompleted(PhoneAuthCredential credential) {
+                    LoginActivity.this.credential = credential;
+                }
+
+                @Override
+                public void onVerificationFailed(FirebaseException e) {
+                    if (e instanceof FirebaseAuthInvalidCredentialsException) {
+
+                    } else if (e instanceof FirebaseTooManyRequestsException) {
+
+                    }
+                }
+
+                @Override
+                public void onCodeSent(String verificationId, PhoneAuthProvider.ForceResendingToken token) {
+                    LoginActivity.this.verificationId = verificationId;
+                    LoginActivity.this.forceResendingToken = token;
+                    Log.d("2FA", "opening prompt");
+                    promptUserVerification();
+                }
+            };
+
+    private MultiFactorResolver multiFactorResolver;
+
+    private void promptUserVerification() {
+        Log.d("2FA", "inside prompt opening");
+        AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
+        builder.setTitle("Enter Phone Verification Code");
+        final EditText codeInput = new EditText(LoginActivity.this);
+        codeInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+        builder.setView(codeInput);
+
+        builder.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                verificationCode = codeInput.getText().toString().trim();
+                PhoneAuthCredential credential = PhoneAuthProvider.getCredential(verificationId, verificationCode);
+                MultiFactorAssertion multiFactorAssertion = PhoneMultiFactorGenerator.getAssertion(credential);
+
+                multiFactorResolver.resolveSignIn(multiFactorAssertion)
+                        .addOnCompleteListener(resolveTask -> {
+                            if (resolveTask.isSuccessful()) {
+                                goToHome();
+                                dialogInterface.dismiss();
+                            }
+                            else {
+                                mAuth.signOut();
+                                showLoginFailed(R.string.not_verified);
+                            }
+                        });
+            }
+        });
+        builder.setCancelable(false);
+
+        builder.setNegativeButton("Cancel", null);
+
+        Log.d("2FA", "building and showing prompt");
+        builder.create().show();
+    }
+
+    private void check2FA(Task<AuthResult> task) {
+        Log.d("2FA", "outside if statement");
+        if (task.getException() instanceof FirebaseAuthMultiFactorException) {
+            FirebaseAuthMultiFactorException e = (FirebaseAuthMultiFactorException) task.getException();
+            multiFactorResolver = e.getResolver();
+            Log.d("2FA", "after multiFactorResolver");
+            MultiFactorInfo selectedHint = multiFactorResolver.getHints().get(0);
+            Log.d("2FA", "after selectedHint");
+
+            Log.d("2FA", "going to send sms and open prompt");
+            PhoneAuthProvider.verifyPhoneNumber(PhoneAuthOptions.newBuilder()
+                    .setActivity(this)
+                    .setMultiFactorSession(multiFactorResolver.getSession())
+                    .setMultiFactorHint((PhoneMultiFactorInfo) selectedHint)
+                    .setCallbacks(callbacks)
+                    .setTimeout(30L, TimeUnit.SECONDS)
+                    .build());
+            Log.d("2FA", "after verifyPhoneNumber");
+        }
     }
 
     private void forceGoogleAccountSelection() {

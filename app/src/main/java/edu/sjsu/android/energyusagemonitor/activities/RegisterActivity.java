@@ -1,9 +1,12 @@
 package edu.sjsu.android.energyusagemonitor.activities;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
@@ -19,15 +22,26 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.Firebase;
+import com.google.firebase.FirebaseException;
+import com.google.firebase.FirebaseTooManyRequestsException;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.MultiFactorAssertion;
+import com.google.firebase.auth.MultiFactorSession;
+import com.google.firebase.auth.PhoneAuthCredential;
+import com.google.firebase.auth.PhoneAuthOptions;
+import com.google.firebase.auth.PhoneAuthProvider;
+import com.google.firebase.auth.PhoneMultiFactorGenerator;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.SetOptions;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import edu.sjsu.android.energyusagemonitor.R;
 import edu.sjsu.android.energyusagemonitor.databinding.ActivityLoginBinding;
@@ -46,6 +60,7 @@ public class RegisterActivity extends AppCompatActivity {
         final EditText firstnameEditText = findViewById(R.id.first_name_register);
         final EditText lastnameEditText = findViewById(R.id.last_name_register);
         final EditText usernameEditText = findViewById(R.id.username_register);
+        final EditText phoneEditText = findViewById(R.id.phone_register);
         final EditText passwordEditText = findViewById(R.id.password_register);
         final EditText passwordEditText2 = findViewById(R.id.password_register2);
 
@@ -96,6 +111,7 @@ public class RegisterActivity extends AppCompatActivity {
                 String firstname = firstnameEditText.getText().toString();
                 String lastname = lastnameEditText.getText().toString();
                 String username = usernameEditText.getText().toString();
+                String phone = "+" + phoneEditText.getText().toString().trim().replaceAll("[^0-9]", "");
                 String password = passwordEditText.getText().toString();
                 String password2 = passwordEditText2.getText().toString();
                 if (password.equals(password2) && meetsPWRequirements(password)) {
@@ -107,12 +123,17 @@ public class RegisterActivity extends AppCompatActivity {
                                         // Registration successful, move to HomeDashboardActivity
                                         FirebaseUser user = mAuth.getCurrentUser();
                                         if (user != null) {
-                                            user.sendEmailVerification();
-                                            saveUserToFirestore(user, firstname, lastname, username);
-                                            mAuth.signOut();
-                                            Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
-                                            startActivity(intent);
-                                            finish();
+                                            user.sendEmailVerification()
+                                                            .addOnCompleteListener(verificationTask -> {
+                                                                if (verificationTask.isSuccessful()) {
+                                                                    saveUserToFirestore(user, firstname, lastname, username);
+                                                                    promptEmailVerfication(user, phone);
+                                                                }
+                                                                else {
+                                                                    showRegistrationFailed(R.string.registration_failed);
+                                                                    mAuth.getCurrentUser().delete();
+                                                                }
+                                                            });
                                         }
                                     } else {
                                         showRegistrationFailed(R.string.registration_failed);
@@ -129,6 +150,123 @@ public class RegisterActivity extends AppCompatActivity {
         loginHereButton.setOnClickListener(v -> {
             startActivity(new Intent(this, LoginActivity.class));
         });
+    }
+
+    private PhoneAuthProvider.ForceResendingToken forceResendingToken;
+    private String verificationId;
+    private String verificationCode;
+    private PhoneAuthCredential credential;
+
+    private PhoneAuthProvider.OnVerificationStateChangedCallbacks callbacks =
+            new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+
+                @Override
+                public void onVerificationCompleted(PhoneAuthCredential credential) {
+                    RegisterActivity.this.credential = credential;
+                }
+
+                @Override
+                public void onVerificationFailed(FirebaseException e) {
+                }
+
+                @Override
+                public void onCodeSent(String verificationId, PhoneAuthProvider.ForceResendingToken token) {
+                    RegisterActivity.this.verificationId = verificationId;
+                    RegisterActivity.this.forceResendingToken = token;
+
+                    promptUserVerification();
+                }
+            };
+
+    private void promptEmailVerfication(FirebaseUser user, String phone) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(RegisterActivity.this);
+        builder.setTitle("Verify Email");
+        builder.setMessage("Please check your email to verify your account before proceeeding to 2FA. Press continue when ready.");
+        builder.setPositiveButton("Continue", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                user.reload().addOnCompleteListener(reload -> {
+                    if (user.isEmailVerified()) {
+                        enroll2FA(user, phone);
+                        dialogInterface.dismiss();
+                    } else {
+                        Toast.makeText(RegisterActivity.this, "Please verify email first.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        });
+        builder.setCancelable(false);
+
+        builder.create().show();
+    }
+
+    private void promptUserVerification() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(RegisterActivity.this);
+        builder.setTitle("Enter Phone Verification Code");
+        final EditText codeInput = new EditText(RegisterActivity.this);
+        codeInput.setHint("123456");
+        codeInput.setInputType(InputType.TYPE_CLASS_NUMBER);
+        builder.setView(codeInput);
+
+        builder.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                if (!codeInput.getText().toString().trim().isEmpty()) {
+                    verificationCode = codeInput.getText().toString().trim();
+                    PhoneAuthCredential credential = PhoneAuthProvider.getCredential(verificationId, verificationCode);
+                    MultiFactorAssertion multiFactorAssertion = PhoneMultiFactorGenerator.getAssertion(credential);
+                    FirebaseAuth.getInstance()
+                            .getCurrentUser()
+                            .getMultiFactor()
+                            .enroll(multiFactorAssertion, "Phone Number")
+                            .addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    mAuth.signOut();
+                                    Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+                                    startActivity(intent);
+                                    finish();
+                                } else {
+                                    deleteUserFromFirestore(FirebaseAuth.getInstance().getCurrentUser());
+                                    mAuth.getCurrentUser().delete();
+                                }
+                            });
+                    dialogInterface.dismiss();
+                }
+                else {
+                    Toast.makeText(RegisterActivity.this, "Fill in code", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        builder.setCancelable(false);
+
+        builder.setNegativeButton("Cancel", null);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    private void enroll2FA(FirebaseUser user, String phoneNumber) {
+
+        user.getMultiFactor().getSession()
+                .addOnCompleteListener(new OnCompleteListener<MultiFactorSession>() {
+                    @Override
+                    public void onComplete(@NonNull Task<MultiFactorSession> task) {
+                        if (task.isSuccessful()) {
+                            MultiFactorSession multiFactorSession = task.getResult();
+
+                            String phone = "+15555551234";
+
+                            PhoneAuthOptions phoneAuthOptions = PhoneAuthOptions.newBuilder()
+                                    .setPhoneNumber(phone)
+                                    .setTimeout(30L, TimeUnit.SECONDS)
+                                    .setMultiFactorSession(multiFactorSession)
+                                    .setCallbacks(callbacks)
+                                    .build();
+
+                            PhoneAuthProvider.verifyPhoneNumber(phoneAuthOptions);
+                        }
+                    }
+                });
     }
 
     private boolean meetsPWRequirements(String pw) {
@@ -189,6 +327,12 @@ public class RegisterActivity extends AppCompatActivity {
                 docRef.set(profile, SetOptions.merge());
             }
         });
+    }
+
+    private void deleteUserFromFirestore(FirebaseUser user) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference docRef = db.collection("users").document(user.getUid());
+        docRef.delete();
     }
 
     private void showRegistrationFailed(@StringRes int errorString) {

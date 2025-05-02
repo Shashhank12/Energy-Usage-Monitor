@@ -2,8 +2,8 @@
     <string name="app_name">Energy Usage Monitor</string>
     <string name="default_web_client_id">719288614761-f6dieonpml6a0juef9980jj4lmq4mhis.apps.googleusercontent.com</string>
     <string name="title_activity_login">Login Page</string>
-    <string name="prompt_email">Email (required)</string>
-    <string name="prompt_password">Password (required)</string>
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
     <string name="action_sign_in">Sign in</string>
     <string name="action_sign_in_short">Sign in</string>
     <string name="welcome">"Welcome !"</string>
@@ -31,7 +31,7 @@
     <string name="about_analysis_title">About Energy Analysis</string>
     <string name="about_analysis_message">This tool helps you understand your energy usage patterns...</string>
     <string name="menu">menu</string>
-    <string name="confirm_password">"Confirm Password (required)"</string>
+    <string name="confirm_password">"Confirm Password ()"</string>
     <string name="password_no_match">"Passwords do not match"</string>
     <string name="register_extra_text_2">Already have an account?</string>
     <string name="login_here">Login here.</string>
@@ -58,6 +58,7 @@
     <string name="special_requirement">• Contain a special character ($*.{}()?!@#%;|).</string>
     <string name="length_requirement">• Be at least 13 characters in length.</string>
     <string name="match_requirement">• match with confirmed password.</string>
+    <string name="prompt_phone">Phone Number (x xxx xxx xxxx)</string>
 
     <string-array name="analysis_types">
         <item>General Analysis</item>

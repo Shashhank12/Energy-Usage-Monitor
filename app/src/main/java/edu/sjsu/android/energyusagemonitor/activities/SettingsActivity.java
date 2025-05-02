@@ -122,7 +122,7 @@ public class SettingsActivity extends AppCompatActivity implements NavigationVie
                                         runOnUiThread(() -> {
                                             tvUploadStatus.setText("File processed successfully!");
                                             Toast.makeText(this, "Manual PG&E Data Loaded!", Toast.LENGTH_SHORT).show();
-                                            Intent intent = new Intent(SettingsActivity.this, EnergyMonitorActivity.class);
+                                            Intent intent = new Intent(SettingsActivity.this, HomeDashboardActivity.class);
                                             startActivity(intent);
                                         });
                                     },
@@ -184,7 +184,7 @@ public class SettingsActivity extends AppCompatActivity implements NavigationVie
                     Log.d(TAG, "Bills fetched successfully via API");
                     logBillData();
                     PgeDataManager.setActiveDataSource(PgeDataManager.DataSource.API);
-                    Intent intent = new Intent(SettingsActivity.this, EnergyMonitorActivity.class);
+                    Intent intent = new Intent(SettingsActivity.this, HomeDashboardActivity.class);
                     startActivity(intent);
                 } else {
                     Log.e(TAG, "Failed to fetch bills: " + response.code() + " - " + response.message());

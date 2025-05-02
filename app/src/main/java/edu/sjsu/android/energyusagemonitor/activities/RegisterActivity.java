@@ -131,6 +131,7 @@ public class RegisterActivity extends AppCompatActivity {
                                                                 }
                                                                 else {
                                                                     showRegistrationFailed(R.string.registration_failed);
+                                                                    deleteUserFromFirestore(user);
                                                                     mAuth.getCurrentUser().delete();
                                                                 }
                                                             });
@@ -197,6 +198,15 @@ public class RegisterActivity extends AppCompatActivity {
         });
         builder.setCancelable(false);
 
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                showRegistrationFailed(R.string.registration_failed);
+                deleteUserFromFirestore(user);
+                mAuth.getCurrentUser().delete();
+            }
+        });
+
         builder.create().show();
     }
 
@@ -204,7 +214,7 @@ public class RegisterActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(RegisterActivity.this);
         builder.setTitle("Enter Phone Verification Code");
         final EditText codeInput = new EditText(RegisterActivity.this);
-        codeInput.setHint("123456");
+        codeInput.setHint("XXXXXX");
         codeInput.setInputType(InputType.TYPE_CLASS_NUMBER);
         builder.setView(codeInput);
 

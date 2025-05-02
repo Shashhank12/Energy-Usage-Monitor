@@ -64,7 +64,6 @@ public class LoginActivity extends AppCompatActivity {
             mAuth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this, task -> {
                         if (task.isSuccessful()) {
-                            Log.d("2FA", "signin success");
                             FirebaseUser user = mAuth.getCurrentUser();
                             if (user != null) {
                                 user.reload().addOnCompleteListener(reload -> {
@@ -79,8 +78,6 @@ public class LoginActivity extends AppCompatActivity {
                             }
                         }
                         else {
-                            Log.d("2FA", "signin fail");
-                            Log.d("2FA", "entering 2FA");
                             check2FA(task);
                         }
                     });
@@ -117,7 +114,6 @@ public class LoginActivity extends AppCompatActivity {
                 public void onCodeSent(String verificationId, PhoneAuthProvider.ForceResendingToken token) {
                     LoginActivity.this.verificationId = verificationId;
                     LoginActivity.this.forceResendingToken = token;
-                    Log.d("2FA", "opening prompt");
                     promptUserVerification();
                 }
             };
@@ -125,7 +121,6 @@ public class LoginActivity extends AppCompatActivity {
     private MultiFactorResolver multiFactorResolver;
 
     private void promptUserVerification() {
-        Log.d("2FA", "inside prompt opening");
         AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
         builder.setTitle("Enter Phone Verification Code");
         final EditText codeInput = new EditText(LoginActivity.this);
@@ -163,20 +158,15 @@ public class LoginActivity extends AppCompatActivity {
 
         builder.setNegativeButton("Cancel", null);
 
-        Log.d("2FA", "building and showing prompt");
         builder.create().show();
     }
 
     private void check2FA(Task<AuthResult> task) {
-        Log.d("2FA", "outside if statement");
         if (task.getException() instanceof FirebaseAuthMultiFactorException) {
             FirebaseAuthMultiFactorException e = (FirebaseAuthMultiFactorException) task.getException();
             multiFactorResolver = e.getResolver();
-            Log.d("2FA", "after multiFactorResolver");
             MultiFactorInfo selectedHint = multiFactorResolver.getHints().get(0);
-            Log.d("2FA", "after selectedHint");
 
-            Log.d("2FA", "going to send sms and open prompt");
             PhoneAuthProvider.verifyPhoneNumber(PhoneAuthOptions.newBuilder()
                     .setActivity(this)
                     .setMultiFactorSession(multiFactorResolver.getSession())
@@ -184,7 +174,6 @@ public class LoginActivity extends AppCompatActivity {
                     .setCallbacks(callbacks)
                     .setTimeout(30L, TimeUnit.SECONDS)
                     .build());
-            Log.d("2FA", "after verifyPhoneNumber");
         }
     }
 

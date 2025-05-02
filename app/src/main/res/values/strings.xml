@@ -10,6 +10,7 @@
     <string name="invalid_username">Not a valid username</string>
     <string name="invalid_password">Password must be >5 characters</string>
     <string name="login_failed">"Login failed"</string>
+    <string name="not_verified">"Login failed: Please verify account."</string>
     <string name="registration_failed">"Registration failed"</string>
     <string name="navigation_drawer_open">Open Navigation Drawer</string>
     <string name="navigation_drawer_close">Close Navigation Drawer</string>
@@ -30,8 +31,10 @@
     <string name="about_analysis_title">About Energy Analysis</string>
     <string name="about_analysis_message">This tool helps you understand your energy usage patterns...</string>
     <string name="menu">menu</string>
-    <string name="confirm_password">"Confirm Password"</string>
+    <string name="confirm_password">"Confirm Password ()"</string>
     <string name="password_no_match">"Passwords do not match"</string>
+    <string name="req_not_met">Password requirements not met.</string>
+    <string name="phone_format_wrong">Phone format incorrect.</string>
     <string name="register_extra_text_2">Already have an account?</string>
     <string name="login_here">Login here.</string>
     <string name="come_back_to_this_app_and_tap_the_upload_pg_amp_e_zip_data_button_select_the_zip_file_you_just_downloaded_from_pg_amp_e"><![CDATA[Come back to this app and tap the \'Upload PG&E ZIP Data\' button. Select the ZIP file you just downloaded from PG&E.]]></string>
@@ -50,6 +53,15 @@
     <string name="go_to_the_pg_amp_e_website_pge_com_and_log_in_to_your_account"><![CDATA[Go to the PG&E website (pge.com) and log in to your account.]]></string>
     <string name="step_1_log_in_to_pg_amp_e"><![CDATA[Step 1: Log in to PG&E]]></string>
     <string name="empty" />
+
+    <string name="password_requirement_title">Password must...</string>
+    <string name="uppercase_requirement">• Contain an uppercase letter.</string>
+    <string name="lowercase_requirement">• Contain a lowercase letter.</string>
+    <string name="number_requirement">• Contain a number.</string>
+    <string name="special_requirement">• Contain a special character ($*.{}()?!@#%;|).</string>
+    <string name="length_requirement">• Be at least 13 characters in length.</string>
+    <string name="match_requirement">• match with confirmed password.</string>
+    <string name="prompt_phone">Phone Number (x xxx xxx xxxx)</string>
 
     <string-array name="analysis_types">
         <item>General Analysis</item>

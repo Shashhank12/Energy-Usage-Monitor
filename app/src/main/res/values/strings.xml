@@ -2,8 +2,8 @@
     <string name="app_name">Energy Usage Monitor</string>
     <string name="default_web_client_id">719288614761-f6dieonpml6a0juef9980jj4lmq4mhis.apps.googleusercontent.com</string>
     <string name="title_activity_login">Login Page</string>
-    <string name="prompt_email">Email</string>
-    <string name="prompt_password">Password</string>
+    <string name="prompt_email">Email (required)</string>
+    <string name="prompt_password">Password (required)</string>
     <string name="action_sign_in">Sign in</string>
     <string name="action_sign_in_short">Sign in</string>
     <string name="welcome">"Welcome !"</string>
@@ -31,7 +31,7 @@
     <string name="about_analysis_title">About Energy Analysis</string>
     <string name="about_analysis_message">This tool helps you understand your energy usage patterns...</string>
     <string name="menu">menu</string>
-    <string name="confirm_password">"Confirm Password"</string>
+    <string name="confirm_password">"Confirm Password (required)"</string>
     <string name="password_no_match">"Passwords do not match"</string>
     <string name="register_extra_text_2">Already have an account?</string>
     <string name="login_here">Login here.</string>
@@ -50,6 +50,14 @@
     <string name="pg_amp_e_login_screen"><![CDATA[PG&E Login Screen]]></string>
     <string name="go_to_the_pg_amp_e_website_pge_com_and_log_in_to_your_account"><![CDATA[Go to the PG&E website (pge.com) and log in to your account.]]></string>
     <string name="step_1_log_in_to_pg_amp_e"><![CDATA[Step 1: Log in to PG&E]]></string>
+
+    <string name="password_requirement_title">Password must...</string>
+    <string name="uppercase_requirement">• Contain an uppercase letter.</string>
+    <string name="lowercase_requirement">• Contain a lowercase letter.</string>
+    <string name="number_requirement">• Contain a number.</string>
+    <string name="special_requirement">• Contain a special character ($*.{}()?!@#%;|).</string>
+    <string name="length_requirement">• Be at least 13 characters in length.</string>
+    <string name="match_requirement">• match with confirmed password.</string>
 
     <string-array name="analysis_types">
         <item>General Analysis</item>

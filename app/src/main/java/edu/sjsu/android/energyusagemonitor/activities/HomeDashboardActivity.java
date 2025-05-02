@@ -31,6 +31,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
+import android.os.Build;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import android.app.PendingIntent;
+import com.google.android.material.snackbar.Snackbar;
+
 import edu.sjsu.android.energyusagemonitor.upload.PgeDataManager;
 import edu.sjsu.android.energyusagemonitor.R;
 import edu.sjsu.android.energyusagemonitor.upload.TimePeriodUsage;
@@ -43,19 +52,20 @@ import edu.sjsu.android.energyusagemonitor.utilityapi.models.BillsResponse;
 public class HomeDashboardActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "HomeDashboardActivity";
-
     private DrawerLayout drawerLayout;
     private FirestoreRepository firestoreRepository;
     private PgeDataManager pgeDataManager;
     private double budget = 0;
-
     private PieChart pieChart;
     private List<PieEntry> entries = new ArrayList<>();
     private TextView energyUseText;
     private TextView energyCostText;
     private TextView outlierText;
     private TextView energySavingTip;
-
+    private List<String> notifications = new ArrayList<String>();
+    private final List<String> snackbarQueue = new ArrayList<>();
+    private boolean isSnackbarShowing = false;
+    private static int onCreateCount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,7 +98,95 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
         energySavingTip.setText("New Energy Saving Reminder: " + randomTip);
 
         fetchUserBudgetAndProcessData();
+
+        String message = (String) outlierText.getText();
+
+        notifications.add("Make sure to check your monthly energy bill!");
+        notifications.add(message);
+        notifications.add("New Energy Saving Reminder: " + randomTip);
+
+        showQueuedSnackbar("Make sure to check your monthly energy bill!");
+        if(onCreateCount==0)
+        {
+            showQueuedSnackbar(message);
+        }
+        onCreateCount++;
+        showQueuedSnackbar("New Energy Saving Reminder: " + randomTip);
+
+        showLoginNotifications();
     }
+
+    private void showQueuedSnackbar(String message) {
+        snackbarQueue.add(message);
+        if (!isSnackbarShowing) {
+            showNextSnackbar();
+        }
+    }
+
+    private void showNextSnackbar() {
+        if (snackbarQueue.isEmpty()) {
+            isSnackbarShowing = false;
+            return;
+        }
+
+        isSnackbarShowing = true;
+        String message = snackbarQueue.remove(0);
+        Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_SHORT);
+        snackbar.addCallback(new Snackbar.Callback() {
+            @Override
+            public void onDismissed(Snackbar transientBottomBar, int event) {
+                showNextSnackbar();
+            }
+        });
+        snackbar.show();
+    }
+
+    private void showLoginNotifications() {
+        for (int i = 0; i < notifications.size(); i++) {
+            showNotification(this, notifications.get(i), i);
+        }
+    }
+
+    private void showNotification(Context context, String message, int notificationId) {
+        String channelId = "login_notifications";
+        NotificationManager notificationManager =
+                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        Intent intent = new Intent(context, HomeDashboardActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                context,
+                0,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE
+        );
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    channelId,
+                    "Login Notifications",
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+            channel.setDescription("Energy usage alerts shown on login.");
+            channel.enableVibration(true);
+            channel.enableLights(true);
+            notificationManager.createNotificationChannel(channel);
+        }
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
+                .setSmallIcon(R.drawable.ic_notifications)
+                .setContentTitle("Notice")
+                .setContentText(message)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .setFullScreenIntent(pendingIntent, true)
+                .setDefaults(NotificationCompat.DEFAULT_ALL);
+
+        notificationManager.notify(notificationId, builder.build());
+    }
+
 
     private void fetchUserBudgetAndProcessData() {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -234,15 +332,23 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
     }
 
     private void updateOutlierTextView(double recentAvg, double olderAvg) {
+        String message = "";
         if (olderAvg == 0 && recentAvg > 0) {
-            outlierText.setText("Monthly cost trend has started from zero.");
+            message = "Monthly cost trend has started from zero.";
+            outlierText.setText(message);
         } else if (recentAvg < olderAvg) {
-            outlierText.setText("Your average monthly cost is trending upward. Consult Energy Analysis for advice on better savings!");
+            message = "Your average monthly cost is trending upward. Consult Energy Analysis for advice on better savings!";
+            outlierText.setText(message);
         } else {
-            outlierText.setText("Your average monthly cost is trending downward. Congratulations! Consult Energy Analysis to save even more!");
+            message = "Your average monthly cost is trending downward. Congratulations! Consult Energy Analysis to save even more!";
+            outlierText.setText(message);
         }
-    }
 
+        notifications.set(1, message);
+        showNotification(this, notifications.get(1), 1);
+
+        showQueuedSnackbar(message);
+    }
 
     private void updatePieChartFromManual(List<TimePeriodUsage> manualMonths, double userBudget) {
         if (manualMonths.isEmpty()) {

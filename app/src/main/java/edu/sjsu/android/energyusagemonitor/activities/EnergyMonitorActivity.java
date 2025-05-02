@@ -44,6 +44,8 @@ public class EnergyMonitorActivity extends AppCompatActivity implements Navigati
     private Switch toggleSwitch;
     private TextView pageIndicatorText;
     private TextView summaryText;
+    private TextView predictionText;
+    private TextView predictionAmount;
     private Button prevBtn;
     private Button nextBtn;
     private int currentPage = 0;
@@ -226,11 +228,20 @@ public class EnergyMonitorActivity extends AppCompatActivity implements Navigati
         prevBtn.setEnabled(currentPage > 0);
         nextBtn.setEnabled(currentPage < totalPages - 1);
 
-        double predictedMonthlyCost = predictMonthlyCost();
-        Log.d("REGRESSION", String.valueOf(predictedMonthlyCost));
+        predictionAmount = findViewById(R.id.predicted_amount);
+        predictionText = findViewById(R.id.predicted_text);
+        double predictedMonthly = predictMonthly(showCost);
+        if (showCost) {
+            predictionText.setText("Monthly Cost Prediction:");
+            predictionAmount.setText(String.format("%.2f", predictedMonthly));
+        }
+        else {
+            predictionText.setText("Monthly Energy Prediction:");
+            predictionAmount.setText("$" + String.format("%.2f", predictedMonthly) + " kWh");
+        }
     }
 
-    private double predictMonthlyCost() {
+    private double predictMonthly(boolean showCost) {
         List<Float> dataValues = new ArrayList<>();
 
         if (currentDataSource == PgeDataManager.DataSource.MANUAL) {
@@ -238,7 +249,7 @@ public class EnergyMonitorActivity extends AppCompatActivity implements Navigati
                 List<TimePeriodUsage> pageData = paginatedManualMonths.get(i);
                 for (TimePeriodUsage monthData : pageData) {
                     if (monthData == null) continue;
-                    float value = (float) monthData.getTotalCost();
+                    float value = (float) (showCost ? monthData.getTotalCost() : monthData.getTotalKwh());
                     dataValues.add(value);
                 }
             }
@@ -248,7 +259,7 @@ public class EnergyMonitorActivity extends AppCompatActivity implements Navigati
                 List<BillsResponse.Bill> pageData = paginatedApiBills.get(i);
                 for (BillsResponse.Bill bill : pageData) {
                     if (bill == null || bill.getBase() == null) continue;
-                    float value = (float) bill.getBase().getBillTotalCost();
+                    float value = (float) (showCost ? bill.getBase().getBillTotalCost() : bill.getBase().getBillTotalKwh());
                     dataValues.add(value);
                 }
             }

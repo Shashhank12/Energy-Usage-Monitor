@@ -49,6 +49,7 @@
     <string name="pg_amp_e_login_screen"><![CDATA[PG&E Login Screen]]></string>
     <string name="go_to_the_pg_amp_e_website_pge_com_and_log_in_to_your_account"><![CDATA[Go to the PG&E website (pge.com) and log in to your account.]]></string>
     <string name="step_1_log_in_to_pg_amp_e"><![CDATA[Step 1: Log in to PG&E]]></string>
+    <string name="empty" />
 
     <string-array name="analysis_types">
         <item>General Analysis</item>

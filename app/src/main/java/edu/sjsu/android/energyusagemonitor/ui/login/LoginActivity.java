@@ -5,7 +5,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
-import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -26,11 +27,11 @@ import com.google.firebase.firestore.SetOptions;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import edu.sjsu.android.energyusagemonitor.R;
 import edu.sjsu.android.energyusagemonitor.activities.HomeDashboardActivity;
 import edu.sjsu.android.energyusagemonitor.activities.RegisterActivity;
+import edu.sjsu.android.energyusagemonitor.activities.SettingsActivity;
 import edu.sjsu.android.energyusagemonitor.databinding.ActivityLoginBinding;
 
 public class LoginActivity extends AppCompatActivity {
@@ -68,7 +69,7 @@ public class LoginActivity extends AppCompatActivity {
                             if (user != null) {
                                 user.reload().addOnCompleteListener(reload -> {
                                     if (user.isEmailVerified()) {
-                                        goToHome();
+                                        goToSettings();
                                     }
                                     else {
                                         mAuth.signOut();
@@ -124,41 +125,64 @@ public class LoginActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
         builder.setTitle("Enter Phone Verification Code");
         final EditText codeInput = new EditText(LoginActivity.this);
+        codeInput.setHint("XXXXXX");
         codeInput.setInputType(InputType.TYPE_CLASS_NUMBER);
         builder.setView(codeInput);
-
-        builder.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                verificationCode = codeInput.getText().toString().trim();
-                PhoneAuthCredential credential = PhoneAuthProvider.getCredential(verificationId, verificationCode);
-                MultiFactorAssertion multiFactorAssertion = PhoneMultiFactorGenerator.getAssertion(credential);
-
-                multiFactorResolver.resolveSignIn(multiFactorAssertion)
-                        .addOnCompleteListener(resolveTask -> {
-                            if (resolveTask.isSuccessful()) {
-                                FirebaseUser user = mAuth.getCurrentUser();
-                                if (user != null) {
-                                    user.reload().addOnCompleteListener(reload -> {
-                                        if (user.isEmailVerified()) {
-                                            goToHome();
-                                            dialogInterface.dismiss();
-                                        }
-                                    });
-                                }
-                            }
-                            else {
-                                mAuth.signOut();
-                                showLoginFailed(R.string.not_verified);
-                            }
-                        });
-            }
-        });
-        builder.setCancelable(false);
-
+        builder.setPositiveButton("Verify", null);
         builder.setNegativeButton("Cancel", null);
 
-        builder.create().show();
+        AlertDialog dialog = builder.create();
+
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialogInterface) {
+                Button verify = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                verify.setText("Verify");
+                verify.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (!codeInput.getText().toString().trim().isEmpty()) {
+                            verificationCode = codeInput.getText().toString().trim();
+                            PhoneAuthCredential credential = PhoneAuthProvider.getCredential(verificationId, verificationCode);
+                            MultiFactorAssertion multiFactorAssertion = PhoneMultiFactorGenerator.getAssertion(credential);
+
+                            multiFactorResolver.resolveSignIn(multiFactorAssertion)
+                                    .addOnCompleteListener(resolveTask -> {
+                                        if (resolveTask.isSuccessful()) {
+                                            FirebaseUser user = mAuth.getCurrentUser();
+                                            if (user != null) {
+                                                user.reload().addOnCompleteListener(reload -> {
+                                                    if (user.isEmailVerified()) {
+                                                        goToSettings();
+                                                        dialog.dismiss();
+                                                    }
+                                                });
+                                            }
+                                        }
+                                        else {
+                                            showLoginFailed(R.string.not_verified);
+                                        }
+                                    });
+                        }
+                        else {
+                            Toast.makeText(LoginActivity.this, "Fill in code", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+
+                Button cancel = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+                cancel.setText("Cancel");
+                cancel.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mAuth.signOut();
+                        dialog.dismiss();
+                    }
+                });
+            }
+        });
+
+        dialog.show();
     }
 
     private void check2FA(Task<AuthResult> task) {
@@ -211,7 +235,7 @@ public class LoginActivity extends AppCompatActivity {
                 FirebaseUser user = mAuth.getCurrentUser();
                 if (user != null) {
                     saveUserToFirestore(user, account);
-                    goToHome();
+                    goToSettings();
                 }
             } else {
                 showLoginFailed(R.string.login_failed);
@@ -241,8 +265,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
 
-    private void goToHome() {
-        startActivity(new Intent(this, HomeDashboardActivity.class));
+    private void goToSettings() {
+        startActivity(new Intent(this, SettingsActivity.class));
         finish();
     }
 

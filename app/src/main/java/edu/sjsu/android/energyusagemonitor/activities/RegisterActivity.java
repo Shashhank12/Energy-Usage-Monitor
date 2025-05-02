@@ -114,7 +114,12 @@ public class RegisterActivity extends AppCompatActivity {
                 String phone = "+" + phoneEditText.getText().toString().trim().replaceAll("[^0-9]", "");
                 String password = passwordEditText.getText().toString();
                 String password2 = passwordEditText2.getText().toString();
-                if (password.equals(password2) && meetsPWRequirements(password)) {
+
+                boolean pwMatch = password.equals(password2);
+                boolean reqMet = meetsPWRequirements(password);
+                boolean phoneFormat = phone.matches("\\+\\d{11}");
+
+                if (pwMatch && reqMet && phoneFormat) {
                     mAuth.createUserWithEmailAndPassword(username, password)
                             .addOnCompleteListener(RegisterActivity.this, new OnCompleteListener<AuthResult>() {
                                 @Override
@@ -141,6 +146,12 @@ public class RegisterActivity extends AppCompatActivity {
                                     }
                                 }
                             });
+                }
+                else if (!reqMet) {
+                    showRegistrationFailed(R.string.req_not_met);
+                }
+                else if (!phoneFormat) {
+                    showRegistrationFailed(R.string.phone_format_wrong);
                 }
                 else {
                     showRegistrationFailed(R.string.password_no_match);
@@ -183,31 +194,47 @@ public class RegisterActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(RegisterActivity.this);
         builder.setTitle("Verify Email");
         builder.setMessage("Please check your email to verify your account before proceeeding to 2FA. Press continue when ready.");
-        builder.setPositiveButton("Continue", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton("Verify", null);
+        builder.setNegativeButton("Cancel", null);
+
+        AlertDialog dialog = builder.create();
+
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                user.reload().addOnCompleteListener(reload -> {
-                    if (user.isEmailVerified()) {
-                        enroll2FA(user, phone);
-                        dialogInterface.dismiss();
-                    } else {
-                        Toast.makeText(RegisterActivity.this, "Please verify email first.", Toast.LENGTH_SHORT).show();
-                    }
-                });
+            public void onShow(DialogInterface dialogInterface) {
+                Button verify = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                if (verify != null) {
+                    verify.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            user.reload().addOnCompleteListener(reload -> {
+                                if (user.isEmailVerified()) {
+                                    enroll2FA(user, phone);
+                                    dialog.dismiss();
+                                } else {
+                                    Toast.makeText(RegisterActivity.this, "Please verify email first.", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+                    });
+                }
+
+                Button cancel = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+                if (cancel != null) {
+                    cancel.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            showRegistrationFailed(R.string.registration_failed);
+                            deleteUserFromFirestore(user);
+                            mAuth.getCurrentUser().delete();
+                            dialog.dismiss();
+                        }
+                    });
+                }
             }
         });
-        builder.setCancelable(false);
 
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                showRegistrationFailed(R.string.registration_failed);
-                deleteUserFromFirestore(user);
-                mAuth.getCurrentUser().delete();
-            }
-        });
-
-        builder.create().show();
+        dialog.show();
     }
 
     private void promptUserVerification() {
@@ -217,41 +244,58 @@ public class RegisterActivity extends AppCompatActivity {
         codeInput.setHint("XXXXXX");
         codeInput.setInputType(InputType.TYPE_CLASS_NUMBER);
         builder.setView(codeInput);
-
-        builder.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                if (!codeInput.getText().toString().trim().isEmpty()) {
-                    verificationCode = codeInput.getText().toString().trim();
-                    PhoneAuthCredential credential = PhoneAuthProvider.getCredential(verificationId, verificationCode);
-                    MultiFactorAssertion multiFactorAssertion = PhoneMultiFactorGenerator.getAssertion(credential);
-                    FirebaseAuth.getInstance()
-                            .getCurrentUser()
-                            .getMultiFactor()
-                            .enroll(multiFactorAssertion, "Phone Number")
-                            .addOnCompleteListener(task -> {
-                                if (task.isSuccessful()) {
-                                    mAuth.signOut();
-                                    Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
-                                    startActivity(intent);
-                                    finish();
-                                } else {
-                                    deleteUserFromFirestore(FirebaseAuth.getInstance().getCurrentUser());
-                                    mAuth.getCurrentUser().delete();
-                                }
-                            });
-                    dialogInterface.dismiss();
-                }
-                else {
-                    Toast.makeText(RegisterActivity.this, "Fill in code", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-        builder.setCancelable(false);
-
+        builder.setPositiveButton("Verify", null);
         builder.setNegativeButton("Cancel", null);
 
         AlertDialog dialog = builder.create();
+
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialogInterface) {
+                Button verify = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                verify.setText("Verify");
+                verify.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (!codeInput.getText().toString().trim().isEmpty()) {
+                            verificationCode = codeInput.getText().toString().trim();
+                            PhoneAuthCredential credential = PhoneAuthProvider.getCredential(verificationId, verificationCode);
+                            MultiFactorAssertion multiFactorAssertion = PhoneMultiFactorGenerator.getAssertion(credential);
+                            FirebaseAuth.getInstance()
+                                    .getCurrentUser()
+                                    .getMultiFactor()
+                                    .enroll(multiFactorAssertion, "Phone Number")
+                                    .addOnCompleteListener(task -> {
+                                        if (task.isSuccessful()) {
+                                            mAuth.signOut();
+                                            Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
+                                            startActivity(intent);
+                                            finish();
+                                            dialog.dismiss();
+                                        } else {
+                                            Toast.makeText(RegisterActivity.this, "Wrong code. Try again.", Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                        }
+                        else {
+                            Toast.makeText(RegisterActivity.this, "Fill in code", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+
+                Button cancel = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+                cancel.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        showRegistrationFailed(R.string.registration_failed);
+                        deleteUserFromFirestore(FirebaseAuth.getInstance().getCurrentUser());
+                        mAuth.getCurrentUser().delete();
+                        dialog.dismiss();
+                    }
+                });
+            }
+        });
+
         dialog.show();
     }
 
@@ -306,7 +350,7 @@ public class RegisterActivity extends AppCompatActivity {
             ((TextView) findViewById(R.id.number_req)).setTextColor(Color.RED);
         }
 
-        if (pw.matches("^(?=.*[^$*.{}()?!@#%&:;|]).*$")) {
+        if (pw.matches("^(?=.*[$*.{}()?!@#%&:;|]).*$")) {
             ((TextView) findViewById(R.id.special_req)).setTextColor(Color.GREEN);
         }
         else {

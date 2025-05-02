@@ -33,6 +33,8 @@
     <string name="menu">menu</string>
     <string name="confirm_password">"Confirm Password ()"</string>
     <string name="password_no_match">"Passwords do not match"</string>
+    <string name="req_not_met">Password requirements not met.</string>
+    <string name="phone_format_wrong">Phone format incorrect.</string>
     <string name="register_extra_text_2">Already have an account?</string>
     <string name="login_here">Login here.</string>
     <string name="come_back_to_this_app_and_tap_the_upload_pg_amp_e_zip_data_button_select_the_zip_file_you_just_downloaded_from_pg_amp_e"><![CDATA[Come back to this app and tap the \'Upload PG&E ZIP Data\' button. Select the ZIP file you just downloaded from PG&E.]]></string>

@@ -233,11 +233,11 @@ public class EnergyMonitorActivity extends AppCompatActivity implements Navigati
         double predictedMonthly = predictMonthly(showCost);
         if (showCost) {
             predictionText.setText("Monthly Cost Prediction:");
-            predictionAmount.setText(String.format("%.2f", predictedMonthly));
+            predictionAmount.setText("$" + String.format("%.2f", predictedMonthly));
         }
         else {
             predictionText.setText("Monthly Energy Prediction:");
-            predictionAmount.setText("$" + String.format("%.2f", predictedMonthly) + " kWh");
+            predictionAmount.setText(String.format("%.2f", predictedMonthly) + " kWh");
         }
     }
 

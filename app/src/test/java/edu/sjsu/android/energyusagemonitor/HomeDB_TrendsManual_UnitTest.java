@@ -43,7 +43,6 @@ public class HomeDB_TrendsManual_UnitTest {
         }
 
         public void updateTrendTextViews(double usage, double cost) {
-            // Override in test to capture values
         }
 
         public double calculatePercentageChange(double current, double previous) {

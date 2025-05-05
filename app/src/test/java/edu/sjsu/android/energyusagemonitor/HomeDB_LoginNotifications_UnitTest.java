@@ -19,7 +19,6 @@ public class HomeDB_LoginNotifications_UnitTest {
         }
 
         public void showNotification(String message, int notificationId) {
-            // override in test
         }
     }
 

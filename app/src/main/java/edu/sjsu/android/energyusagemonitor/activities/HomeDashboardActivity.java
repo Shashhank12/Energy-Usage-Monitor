@@ -62,9 +62,9 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
     private TextView energyCostText;
     private TextView outlierText;
     private TextView energySavingTip;
-    private List<String> notifications = new ArrayList<String>();
-    private final List<String> snackbarQueue = new ArrayList<>();
-    private boolean isSnackbarShowing = false;
+    public List<String> notifications = new ArrayList<String>();
+    public List<String> snackbarQueue = new ArrayList<>();
+    public boolean isSnackbarShowing = false;
     private static int onCreateCount = 0;
 
     @Override
@@ -116,14 +116,14 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
         showLoginNotifications();
     }
 
-    private void showQueuedSnackbar(String message) {
+    public void showQueuedSnackbar(String message) {
         snackbarQueue.add(message);
         if (!isSnackbarShowing) {
             showNextSnackbar();
         }
     }
 
-    private void showNextSnackbar() {
+    public void showNextSnackbar() {
         if (snackbarQueue.isEmpty()) {
             isSnackbarShowing = false;
             return;
@@ -141,13 +141,13 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
         snackbar.show();
     }
 
-    private void showLoginNotifications() {
+    public void showLoginNotifications() {
         for (int i = 0; i < notifications.size(); i++) {
             showNotification(this, notifications.get(i), i);
         }
     }
 
-    private void showNotification(Context context, String message, int notificationId) {
+    public void showNotification(Context context, String message, int notificationId) {
         String channelId = "login_notifications";
         NotificationManager notificationManager =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -225,7 +225,7 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
         });
     }
 
-    private void processEnergyData(double userBudget) {
+    public void processEnergyData(double userBudget) {
         PgeDataManager.DataSource activeSource = PgeDataManager.getActiveDataSource();
         Log.i(TAG, "Processing energy data for source: " + activeSource);
 
@@ -252,7 +252,7 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
         }
     }
 
-    private void updateTrendsFromManual(List<TimePeriodUsage> manualMonths) {
+    public void updateTrendsFromManual(List<TimePeriodUsage> manualMonths) {
         if (manualMonths.size() < 2) return;
         TimePeriodUsage latestMonth = manualMonths.get(manualMonths.size() - 1);
         TimePeriodUsage previousMonth = manualMonths.get(manualMonths.size() - 2);
@@ -263,7 +263,7 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
         updateTrendTextViews(usagePercent, costPercent);
     }
 
-    private void updateTrendsFromApi(List<BillsResponse.Bill> apiBills) {
+    public void updateTrendsFromApi(List<BillsResponse.Bill> apiBills) {
         if (apiBills.size() < 2) return;
         BillsResponse.Bill latestBill = apiBills.get(0);
         BillsResponse.Bill previousBill = apiBills.get(1);
@@ -276,14 +276,14 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
         updateTrendTextViews(usagePercent, costPercent);
     }
 
-    private double calculatePercentageChange(double currentValue, double previousValue) {
+    public double calculatePercentageChange(double currentValue, double previousValue) {
         if (previousValue == 0) {
             return (currentValue == 0) ? 0 : (currentValue > 0 ? Double.POSITIVE_INFINITY : Double.NEGATIVE_INFINITY);
         }
         return ((currentValue - previousValue) / previousValue) * 100.0;
     }
 
-    private void updateTrendTextViews(double usagePercent, double costPercent) {
+    public void updateTrendTextViews(double usagePercent, double costPercent) {
         String energyUseTextStr;
         if (Double.isInfinite(usagePercent)) energyUseTextStr = "Monthly energy use changed from zero.";
         else if (usagePercent > 0) energyUseTextStr = "Monthly energy use is up " + String.format("%.1f", usagePercent) + "%.";
@@ -301,7 +301,7 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
     }
 
 
-    private void updateOutlierFromManual(List<TimePeriodUsage> manualMonths) {
+    public void updateOutlierFromManual(List<TimePeriodUsage> manualMonths) {
         if (manualMonths.size() < 12) {
             outlierText.setText("Need at least 12 months of data for trend analysis.");
             return;
@@ -350,7 +350,7 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
         showQueuedSnackbar(message);
     }
 
-    private void updatePieChartFromManual(List<TimePeriodUsage> manualMonths, double userBudget) {
+    public void updatePieChartFromManual(List<TimePeriodUsage> manualMonths, double userBudget) {
         if (manualMonths.isEmpty()) {
             setupPieChartNoData("No manual data available.");
             return;
@@ -494,7 +494,7 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
     }
 
 
-    private String getRandomEnergySavingTip() {
+    public String getRandomEnergySavingTip() {
         String[] tips = {
                 "Turn off lights when leaving a room.",
                 "Unplug chargers when not in use.",

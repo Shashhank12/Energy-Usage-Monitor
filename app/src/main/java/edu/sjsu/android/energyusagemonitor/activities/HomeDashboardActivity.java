@@ -12,14 +12,20 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.github.mikephil.charting.animation.Easing;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.Description;
+import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
+import com.github.mikephil.charting.formatter.PercentFormatter;
+import com.github.mikephil.charting.utils.ColorTemplate;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -378,63 +384,127 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
         pieChart.clear();
         entries.clear();
 
+        Typeface montserrat = ResourcesCompat.getFont(this, R.font.montserrat);
+        Typeface montserratBold = ResourcesCompat.getFont(this, R.font.montserrat_bold);
+
+        pieChart.setUsePercentValues(true);
+        pieChart.getDescription().setEnabled(false);
+        pieChart.setExtraOffsets(25f, 15f, 25f, 15f);
+
+        pieChart.setDragDecelerationFrictionCoef(0.95f);
+
+        pieChart.setCenterTextTypeface(montserratBold);
+        pieChart.setCenterTextColor(Color.parseColor("#090909"));
+        pieChart.setCenterTextSize(18f);
+
+        pieChart.setDrawHoleEnabled(true);
+        pieChart.setHoleColor(Color.parseColor("#FAF5F5"));
+
+        pieChart.setTransparentCircleColor(Color.WHITE);
+        pieChart.setTransparentCircleAlpha(110);
+
+        pieChart.setHoleRadius(58f);
+        pieChart.setTransparentCircleRadius(61f);
+
+        pieChart.setDrawCenterText(true);
+
+        pieChart.setRotationAngle(0);
+        pieChart.setRotationEnabled(true);
+        pieChart.setHighlightPerTapEnabled(true);
+
+        pieChart.animateY(1400, Easing.EaseInOutQuad);
+
+        Legend l = pieChart.getLegend();
+        l.setVerticalAlignment(Legend.LegendVerticalAlignment.BOTTOM);
+        l.setHorizontalAlignment(Legend.LegendHorizontalAlignment.CENTER);
+        l.setOrientation(Legend.LegendOrientation.HORIZONTAL);
+        l.setDrawInside(false);
+        l.setWordWrapEnabled(true);
+        l.setXEntrySpace(10f);
+        l.setYEntrySpace(5f);
+        l.setYOffset(10f);
+        l.setEnabled(true);
+        l.setTypeface(montserrat);
+        l.setTextColor(Color.parseColor("#333333"));
+        l.setTextSize(14f);
+
+
+        pieChart.setEntryLabelColor(Color.BLACK);
+        pieChart.setEntryLabelTypeface(montserratBold);
+        pieChart.setEntryLabelTextSize(14f);
+
+
         if (userBudget <= 0) {
-            pieChart.setNoDataText("Set a valid budget in Profile to see the chart!");
-            pieChart.setNoDataTextColor(Color.BLACK);
-            pieChart.setNoDataTextTypeface(Typeface.DEFAULT_BOLD);
-            pieChart.invalidate();
+            setupPieChartNoData("Set a budget in Profile!");
             return;
         }
 
-        double budgetRemaining = userBudget - latestPeriodCost;
-        float usedPercentage = Math.max(0f, (float) (latestPeriodCost / userBudget * 100));
-        float remainingPercentage = Math.max(0f, (float) (budgetRemaining / userBudget * 100));
-        List<Integer> colors = new ArrayList<>();
+        double budgetRemaining = Math.max(0, userBudget - latestPeriodCost);
+        float usedPercentage = (float) (latestPeriodCost / userBudget * 100);
+        float remainingPercentage = (float) (budgetRemaining / userBudget * 100);
 
-        Description description = new Description();
-        description.setEnabled(false);
+        ArrayList<Integer> colors = new ArrayList<>();
+
+        String centerText = "";
 
         if (latestPeriodCost < userBudget) {
-            entries.add(new PieEntry(usedPercentage, "Budget Used (%)"));
-            entries.add(new PieEntry(remainingPercentage, "Budget Remaining (%)"));
-            colors.add(Color.YELLOW);
-            colors.add(Color.GREEN);
+            entries.add(new PieEntry(usedPercentage, "Spent"));
+            entries.add(new PieEntry(remainingPercentage, "Remaining"));
+            colors.add(Color.parseColor("#FFC107"));
+            colors.add(Color.parseColor("#4CAF50"));
+            centerText = String.format("$%.2f\nRemaining", budgetRemaining);
+        } else if (latestPeriodCost == userBudget) {
+            entries.add(new PieEntry(100f, "Spent"));
+            colors.add(Color.parseColor("#FF9800"));
+            centerText = "Budget Met!";
         } else {
-            entries.add(new PieEntry(usedPercentage, "Budget Used (%)"));
-            colors.add(Color.RED);
-
-            description.setEnabled(true);
-            description.setTextSize(14f);
-            description.setTextColor(Color.BLACK);
-            if (latestPeriodCost == userBudget) {
-                description.setText("Budget used fully!");
-            } else {
-                description.setText("You've overspent!");
-            }
-            pieChart.setDescription(description);
+            entries.add(new PieEntry(100f, "Budget Limit"));
+            colors.add(Color.parseColor("#F44336"));
+            centerText = String.format("Over by\n$%.2f!", Math.abs(budgetRemaining));
         }
 
-        PieDataSet pieDataSet = new PieDataSet(entries, "");
-        pieDataSet.setColors(colors);
-        pieDataSet.setValueTextSize(16f);
-        pieDataSet.setValueTextColor(Color.BLACK);
-        pieDataSet.setValueFormatter(new com.github.mikephil.charting.formatter.PercentFormatter(pieChart));
+        pieChart.setCenterText(centerText);
 
-        PieData pieData = new PieData(pieDataSet);
+        PieDataSet dataSet = new PieDataSet(entries, "");
+        dataSet.setSliceSpace(3f);
+        dataSet.setSelectionShift(5f);
+        dataSet.setColors(colors);
 
-        pieChart.setData(pieData);
-        pieChart.setUsePercentValues(true);
-        pieChart.setEntryLabelColor(Color.BLACK);
-        pieChart.setCenterText("Budget vs Spending");
-        pieChart.setCenterTextSize(12f);
+        dataSet.setValueLinePart1OffsetPercentage(60.f);
+        dataSet.setValueLinePart1Length(0.4f);
+        dataSet.setValueLinePart2Length(0.5f);
+        dataSet.setYValuePosition(PieDataSet.ValuePosition.OUTSIDE_SLICE);
+        dataSet.setXValuePosition(PieDataSet.ValuePosition.OUTSIDE_SLICE);
+
+
+        PieData data = new PieData(dataSet);
+        data.setValueFormatter(new PercentFormatter(pieChart));
+        data.setValueTextSize(14f);
+        data.setValueTextColor(Color.BLACK);
+        data.setValueTypeface(montserrat);
+
+        pieChart.setData(data);
+
+        pieChart.highlightValues(null);
         pieChart.invalidate();
     }
 
     private void setupPieChartNoData(String message) {
         pieChart.clear();
-        pieChart.setNoDataText(message);
-        pieChart.setNoDataTextColor(Color.BLACK);
-        pieChart.setNoDataTextTypeface(Typeface.DEFAULT_BOLD);
+        pieChart.setCenterText(message);
+
+        Typeface montserrat = ResourcesCompat.getFont(this, R.font.montserrat);
+        pieChart.setCenterTextTypeface(montserrat);
+        pieChart.setCenterTextColor(Color.parseColor("#A6A6A6"));
+        pieChart.setCenterTextSize(16f);
+
+        pieChart.setDrawHoleEnabled(true);
+        pieChart.setHoleColor(Color.parseColor("#FAF5F5"));
+
+        pieChart.setHighlightPerTapEnabled(false);
+        pieChart.getLegend().setEnabled(false);
+        pieChart.getDescription().setEnabled(false);
+
         pieChart.invalidate();
     }
 

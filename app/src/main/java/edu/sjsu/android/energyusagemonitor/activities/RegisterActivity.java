@@ -7,9 +7,15 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputType;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.TextWatcher;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.View;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -63,6 +69,8 @@ public class RegisterActivity extends AppCompatActivity {
         final EditText phoneEditText = findViewById(R.id.phone_register);
         final EditText passwordEditText = findViewById(R.id.password_register);
         final EditText passwordEditText2 = findViewById(R.id.password_register2);
+
+        setupPrivacyPolicyTextView();
 
         passwordEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -162,6 +170,36 @@ public class RegisterActivity extends AppCompatActivity {
         loginHereButton.setOnClickListener(v -> {
             startActivity(new Intent(this, LoginActivity.class));
         });
+    }
+
+    public void setupPrivacyPolicyTextView() {
+        TextView privacyPolicyTextView = findViewById(R.id.privacy_policy_text_register);
+
+        String privacyText = "By signing up, you agree to the Privacy Policy.";
+        SpannableString spannableString = new SpannableString(privacyText);
+
+        ClickableSpan clickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(View widget) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(RegisterActivity.this);
+                builder.setTitle("Privacy Policy");
+
+                WebView webView = new WebView(RegisterActivity.this);
+                webView.loadUrl("https://shashhank12.github.io/EnergyUsageThirdPartyPortal/");
+                webView.setWebViewClient(new WebViewClient());
+
+                builder.setView(webView);
+                builder.setPositiveButton("Close", (dialog, which) -> dialog.dismiss());
+                builder.show();
+            }
+        };
+
+        int startIndex = privacyText.indexOf("Privacy Policy");
+        int endIndex = startIndex + "Privacy Policy".length();
+        spannableString.setSpan(clickableSpan, startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        privacyPolicyTextView.setText(spannableString);
+        privacyPolicyTextView.setMovementMethod(LinkMovementMethod.getInstance());
     }
 
     private PhoneAuthProvider.ForceResendingToken forceResendingToken;

@@ -3,12 +3,20 @@ package edu.sjsu.android.energyusagemonitor.ui.login;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.view.View;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.StringRes;
@@ -46,6 +54,7 @@ public class LoginActivity extends AppCompatActivity {
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        setupPrivacyPolicyTextView();
         mAuth = FirebaseAuth.getInstance();
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -120,6 +129,36 @@ public class LoginActivity extends AppCompatActivity {
             };
 
     private MultiFactorResolver multiFactorResolver;
+
+    public void setupPrivacyPolicyTextView() {
+        TextView privacyPolicyTextView = findViewById(R.id.privacy_policy_text_login);
+
+        String privacyText = "By signing up, you agree to the Privacy Policy.";
+        SpannableString spannableString = new SpannableString(privacyText);
+
+        ClickableSpan clickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(View widget) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
+                builder.setTitle("Privacy Policy");
+
+                WebView webView = new WebView(LoginActivity.this);
+                webView.loadUrl("https://shashhank12.github.io/EnergyUsageThirdPartyPortal/");
+                webView.setWebViewClient(new WebViewClient());
+
+                builder.setView(webView);
+                builder.setPositiveButton("Close", (dialog, which) -> dialog.dismiss());
+                builder.show();
+            }
+        };
+
+        int startIndex = privacyText.indexOf("Privacy Policy");
+        int endIndex = startIndex + "Privacy Policy".length();
+        spannableString.setSpan(clickableSpan, startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        privacyPolicyTextView.setText(spannableString);
+        privacyPolicyTextView.setMovementMethod(LinkMovementMethod.getInstance());
+    }
 
     private void promptUserVerification() {
         AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);

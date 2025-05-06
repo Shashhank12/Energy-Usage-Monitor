@@ -69,11 +69,9 @@
 
         <EditText
             android:id="@+id/password_register2"
-            android:layout_width="0dp"
+            android:layout_width="331dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
             android:layout_marginTop="24dp"
-            android:layout_marginEnd="24dp"
             android:autofillHints="@string/confirm_password"
             android:backgroundTint="#A6A6A6"
             android:fontFamily="@font/montserrat"
@@ -82,7 +80,6 @@
             android:minHeight="48dp"
             android:selectAllOnFocus="true"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/password_register" />
 
@@ -131,7 +128,7 @@
             android:textSize="16sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/match_req" />
+            app:layout_constraintTop_toBottomOf="@+id/privacy_policy_text_register" />
 
         <LinearLayout
             android:id="@+id/linearLayout"
@@ -229,6 +226,22 @@
             android:textColor="@color/gray_500"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/length_req" />
+
+        <TextView
+            android:id="@+id/privacy_policy_text_register"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="32dp"
+            android:fontFamily="@font/montserrat"
+            android:textAlignment="center"
+            android:textColor="@color/gray_500"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/match_req"
+            tools:text="" />
 
         <TextView
             android:id="@+id/special_req"

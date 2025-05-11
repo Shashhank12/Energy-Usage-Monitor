@@ -12,20 +12,17 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.github.mikephil.charting.animation.Easing;
 import com.github.mikephil.charting.charts.PieChart;
-import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.PercentFormatter;
-import com.github.mikephil.charting.utils.ColorTemplate;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -395,7 +392,7 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
 
         pieChart.setCenterTextTypeface(montserratBold);
         pieChart.setCenterTextColor(Color.parseColor("#090909"));
-        pieChart.setCenterTextSize(18f);
+        pieChart.setCenterTextSize(14f);
 
         pieChart.setDrawHoleEnabled(true);
         pieChart.setHoleColor(Color.parseColor("#FAF5F5"));
@@ -479,7 +476,7 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
 
         PieData data = new PieData(dataSet);
         data.setValueFormatter(new PercentFormatter(pieChart));
-        data.setValueTextSize(14f);
+        data.setValueTextSize(12f);
         data.setValueTextColor(Color.BLACK);
         data.setValueTypeface(montserrat);
 
@@ -496,7 +493,7 @@ public class HomeDashboardActivity extends AppCompatActivity implements Navigati
         Typeface montserrat = ResourcesCompat.getFont(this, R.font.montserrat);
         pieChart.setCenterTextTypeface(montserrat);
         pieChart.setCenterTextColor(Color.parseColor("#A6A6A6"));
-        pieChart.setCenterTextSize(16f);
+        pieChart.setCenterTextSize(14f);
 
         pieChart.setDrawHoleEnabled(true);
         pieChart.setHoleColor(Color.parseColor("#FAF5F5"));

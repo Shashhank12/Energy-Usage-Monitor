@@ -64,6 +64,10 @@
             android:exported="true"
             android:label="Settings Page" />
 
+        <activity android:name=".activities.HouseholdComparisonActivity"
+            android:exported="true"
+            android:label="Household Comparison Page" />
+
         <activity
             android:name=".activities.ProfileActivity"
             android:exported="true"

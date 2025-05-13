@@ -31,6 +31,14 @@ public class PgeDataManager {
     private static final String TAG = "PgeDataManager";
     private static volatile PgeDataManager instance;
 
+    public void clearAllData() {
+        synchronized (manualEnergyData) {
+            manualEnergyData.clear(); // Clear the in-memory manual energy data
+        }
+        setActiveDataSource(DataSource.API); // Reset the active data source to the default (API)
+        Log.d(TAG, "All data cleared and active data source reset to default.");
+    }
+
     public enum DataSource {
         API,
         MANUAL

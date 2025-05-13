@@ -286,6 +286,8 @@ public class EnergyMonitorActivity extends AppCompatActivity implements Navigati
             startActivity(new Intent(this, HomeDashboardActivity.class));
         } else if (id == R.id.nav_analysis) {
             startActivity(new Intent(this, AnalysisActivity.class));
+        } else if (id == R.id.nav_household_comparison) {
+            startActivity(new Intent(this, HouseholdComparisonActivity.class));
         } else if (id == R.id.nav_logout) {
             Toast.makeText(this, "Logging out...", Toast.LENGTH_SHORT).show();
 

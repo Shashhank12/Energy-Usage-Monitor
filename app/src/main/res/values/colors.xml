@@ -35,4 +35,7 @@
     <color name="chart_orange">#FFA726</color>
     <color name="chart_purple">#AB47BC</color>
     <color name="chart_teal">#26A69A</color>
+
+    <color name="your_usage_color">#8B66E2</color>
+    <color name="average_usage_color">#FFA726</color>
 </resources>

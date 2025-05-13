@@ -5,9 +5,7 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-
   workflow_dispatch:
-
   schedule:
     - cron: '0 8 * * *'
 
@@ -34,11 +32,23 @@ jobs:
           echo "UTILITY_API_KEY=${{ secrets.UTILITY_API_KEY }}" >> local.properties
           echo "Generated local.properties"
 
+      - name: Create Keystore Directory
+        run: mkdir -p ~/.android
+
+      - name: Decode Debug Keystore
+        run: |
+          echo "${{ secrets.DEBUG_KEYSTORE_BASE64 }}" | base64 --decode > ~/.android/debug.keystore
+          echo "Custom debug.keystore decoded to ~/.android/debug.keystore"
+
       - name: Grant Gradle execution permissions
         run: chmod +x ./gradlew
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug --stacktrace --info
+        env:
+          ANDROID_DEBUG_STORE_PASSWORD: ${{ secrets.DEBUG_KEYSTORE_PASSWORD }}
+          ANDROID_DEBUG_KEY_ALIAS: ${{ secrets.DEBUG_KEY_ALIAS }}
+          ANDROID_DEBUG_KEY_PASSWORD: ${{ secrets.DEBUG_KEY_PASSWORD }}
 
       - name: Run Unit Tests
         run: ./gradlew testDebugUnitTest --stacktrace --info
@@ -78,24 +88,21 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.build-test-and-prepare-apk.result == 'success'
     permissions:
       contents: write
-
     steps:
       - name: Download APK for Release
         uses: actions/download-artifact@v4
         with:
           name: apk-for-release
           path: artifacts/
-
       - name: Display structure of downloaded files
         run: ls -R artifacts/
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.build-test-and-prepare-apk.outputs.version_tag }}
           name: Release v${{ needs.build-test-and-prepare-apk.outputs.version_tag }}
           body: |
-            Automated GitHub release (Debug APK).
+            Automated GitHub release (Debug APK signed with consistent key).
             Commit: ${{ github.sha }}
             Triggered by: ${{ github.actor }}
           files: artifacts/app-debug.apk

@@ -26,4 +26,14 @@ public class TimePeriodUsage {
     public void setPeriodEnd(LocalDateTime periodEnd) { this.periodEnd = periodEnd; }
     public void setTotalKwh(double totalKwh) { this.totalKwh = totalKwh; }
     public void setTotalCost(double totalCost) { this.totalCost = totalCost; }
+
+    public int compareTo(TimePeriodUsage timePeriodUsage) {
+        if (this.periodStart.isBefore(timePeriodUsage.getPeriodStart())) {
+            return -1;
+        } else if (this.periodStart.isAfter(timePeriodUsage.getPeriodStart())) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
 }

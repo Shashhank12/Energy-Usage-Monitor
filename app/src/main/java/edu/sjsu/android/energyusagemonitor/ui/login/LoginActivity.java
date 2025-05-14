@@ -3,7 +3,6 @@ package edu.sjsu.android.energyusagemonitor.ui.login;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
 import android.text.SpannableString;
@@ -26,7 +25,6 @@ import com.google.android.gms.auth.api.signin.*;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseException;
-import com.google.firebase.FirebaseTooManyRequestsException;
 import com.google.firebase.auth.*;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -37,7 +35,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import edu.sjsu.android.energyusagemonitor.R;
-import edu.sjsu.android.energyusagemonitor.activities.HomeDashboardActivity;
 import edu.sjsu.android.energyusagemonitor.activities.RegisterActivity;
 import edu.sjsu.android.energyusagemonitor.activities.SettingsActivity;
 import edu.sjsu.android.energyusagemonitor.databinding.ActivityLoginBinding;
@@ -48,8 +45,14 @@ public class LoginActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private GoogleSignInClient googleSignInClient;
 
+    private PhoneAuthProvider.ForceResendingToken forceResendingToken;
+    private String verificationId;
+    private String verificationCode;
+    private PhoneAuthCredential credential;
+    private MultiFactorResolver multiFactorResolver;
+
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -65,32 +68,48 @@ public class LoginActivity extends AppCompatActivity {
 
         binding.signInButton.setOnClickListener(v -> forceGoogleAccountSelection());
 
+        findViewById(R.id.forgot_password).setOnClickListener(v -> showResetPasswordDialog());
+
         binding.login.setOnClickListener(v -> {
             String email = binding.username.getText().toString();
             String password = binding.password.getText().toString();
             binding.loading.setVisibility(ProgressBar.VISIBLE);
 
-
             mAuth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this, task -> {
+                        binding.loading.setVisibility(ProgressBar.GONE);
+
                         if (task.isSuccessful()) {
                             FirebaseUser user = mAuth.getCurrentUser();
                             if (user != null) {
                                 user.reload().addOnCompleteListener(reload -> {
                                     if (user.isEmailVerified()) {
                                         goToSettings();
-                                    }
-                                    else {
+                                    } else {
                                         mAuth.signOut();
                                         showLoginFailed(R.string.not_verified);
                                     }
                                 });
                             }
+                        } else {
+                            Exception e = task.getException();
+                            if (e != null) {
+                                e.printStackTrace();
+
+                                if (e instanceof FirebaseAuthInvalidUserException) {
+                                    Toast.makeText(this, "No account found with this email.", Toast.LENGTH_LONG).show();
+                                } else if (e instanceof FirebaseAuthInvalidCredentialsException) {
+                                    Toast.makeText(this, "Incorrect password.", Toast.LENGTH_LONG).show();
+                                } else if (e instanceof FirebaseAuthMultiFactorException) {
+                                    check2FA(task);
+                                } else {
+                                    Toast.makeText(this, "Login failed: " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                                }
+                            } else {
+                                Toast.makeText(this, "Login failed for unknown reasons.", Toast.LENGTH_LONG).show();
+                            }
                         }
-                        else {
-                            check2FA(task);
-                        }
-                    });
+                    }); // ✅ Fixed missing semicolon here
         });
 
         binding.register.setOnClickListener(v -> {
@@ -98,39 +117,37 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    private PhoneAuthProvider.ForceResendingToken forceResendingToken;
-    private String verificationId;
-    private String verificationCode;
-    private PhoneAuthCredential credential;
+    private void showResetPasswordDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Reset Password");
 
-    private PhoneAuthProvider.OnVerificationStateChangedCallbacks callbacks =
-            new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+        final EditText emailInput = new EditText(this);
+        emailInput.setHint("Enter your email");
+        emailInput.setInputType(InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+        builder.setView(emailInput);
 
-                @Override
-                public void onVerificationCompleted(PhoneAuthCredential credential) {
-                    LoginActivity.this.credential = credential;
-                }
+        builder.setPositiveButton("Send Reset Link", (dialog, which) -> {
+            String email = emailInput.getText().toString().trim();
+            if (!email.isEmpty()) {
+                mAuth.sendPasswordResetEmail(email)
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                Toast.makeText(LoginActivity.this, "Password reset email sent.", Toast.LENGTH_LONG).show();
+                            } else {
+                                Toast.makeText(LoginActivity.this, "Failed to send reset email.", Toast.LENGTH_LONG).show();
+                            }
+                        });
+            } else {
+                Toast.makeText(LoginActivity.this, "Please enter your email.", Toast.LENGTH_SHORT).show();
+            }
+        });
 
-                @Override
-                public void onVerificationFailed(FirebaseException e) {
-                    if (e instanceof FirebaseAuthInvalidCredentialsException) {
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
 
-                    } else if (e instanceof FirebaseTooManyRequestsException) {
+        builder.show();
+    }
 
-                    }
-                }
-
-                @Override
-                public void onCodeSent(String verificationId, PhoneAuthProvider.ForceResendingToken token) {
-                    LoginActivity.this.verificationId = verificationId;
-                    LoginActivity.this.forceResendingToken = token;
-                    promptUserVerification();
-                }
-            };
-
-    private MultiFactorResolver multiFactorResolver;
-
-    public void setupPrivacyPolicyTextView() {
+    private void setupPrivacyPolicyTextView() {
         TextView privacyPolicyTextView = findViewById(R.id.privacy_policy_text_login);
 
         String privacyText = "By signing up, you agree to the Privacy Policy.";
@@ -197,13 +214,11 @@ public class LoginActivity extends AppCompatActivity {
                                                     }
                                                 });
                                             }
-                                        }
-                                        else {
+                                        } else {
                                             showLoginFailed(R.string.not_verified);
                                         }
                                     });
-                        }
-                        else {
+                        } else {
                             Toast.makeText(LoginActivity.this, "Fill in code", Toast.LENGTH_SHORT).show();
                         }
                     }
@@ -239,6 +254,27 @@ public class LoginActivity extends AppCompatActivity {
                     .build());
         }
     }
+
+    private PhoneAuthProvider.OnVerificationStateChangedCallbacks callbacks =
+            new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+
+                @Override
+                public void onVerificationCompleted(PhoneAuthCredential credential) {
+                    LoginActivity.this.credential = credential;
+                }
+
+                @Override
+                public void onVerificationFailed(FirebaseException e) {
+                    e.printStackTrace();
+                }
+
+                @Override
+                public void onCodeSent(String verificationId, PhoneAuthProvider.ForceResendingToken token) {
+                    LoginActivity.this.verificationId = verificationId;
+                    LoginActivity.this.forceResendingToken = token;
+                    promptUserVerification();
+                }
+            };
 
     private void forceGoogleAccountSelection() {
         googleSignInClient.signOut().addOnCompleteListener(task -> {
@@ -302,7 +338,6 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
     }
-
 
     private void goToSettings() {
         startActivity(new Intent(this, SettingsActivity.class));

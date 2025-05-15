@@ -44,29 +44,54 @@ Displays a textual and visual summary of the user's energy consumption, monthly 
 - Displays a reminder to check monthly bills, the trend of the average monthly cost over six months, and a helpful suggestion to reduce energy use.
 - Shows a pie chart visualizing current usage in relation to the user's monthly energy budget (percentage spent along with the percentage and dollar amount remaining).
 
-### 5. Settings Page
+### 5. User Notifications
 
-**Description:**  
+**Description:**
+Delivers important, real-time updates and insights to users through both system-level Android notifications (visible outside of the application) and in-app snackbar banners.
 
-**Requirements:** 
+**Requirements:**
+- Displays notifications of real-time reminders, trends, and suggestions based on the latest user data outside the app using the Android notification tray.  
+- Displays in-app banners for immediate, contextual insights that reflect recent user data.  
+- Ensures relevant notifications are shown in the Android notification panel even after the app has been closed.  
 
-### 6. Home Dashboard
+### 6. Navigation Drawer
 
-**Description:**  
+**Description:**
+Provides users with quick access to various sections of the application after logging in.
 
-**Requirements:** 
+**Requirements:**
+- Displays the navigation drawer when the user taps the hamburger icon on the top-left corner.  
+- Includes links to the following sections:  
+  - Profile  
+  - Settings  
+  - Energy Monitor  
+  - Home Dashboard  
+  - Energy Analysis  
+  - Household Comparison  
+  - Logout  
+- Ensures each item redirects the user to the corresponding page. 
 
-### 7. User Notifications
+### 7. Profile Page
 
-**Description:**  
+**Description:**
+Displays the user's personal information and provides options to update details, manage their account, and upload a profile photo.
 
-**Requirements:** 
+**Requirements:**
+- Displays user's name, email, and monthly energy budget.  
+- Allows users to upload and save a profile photo.  
+- Allows users to permanently delete their account by pressing on the appropriate button.   
+- Allows users to edit and save changes to the fields with their personal information after pressing the correct button.
 
 ### 8. Energy Monitor Charts
 
-**Description:**  
+**Description:**
+Displays interactive bar charts that help users analyze their historical energy consumption or cost. The charts are organized by monthly billing periods over the past year.
 
-**Requirements:** 
+**Requirements:**
+- Shows a bar chart visualizing historical data segmented by billing month.  
+- Allows users to toggle between energy usage and cost views.  
+- Enables users to page through newer or older datasets (from the most recent six months to the six months prior) using pagination controls. 
+- Shows helpful metrics below the charts, such as average consumption and expenditure across each six-month period.
 
 ### 9. Monthly Predictions
 

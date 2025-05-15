@@ -95,18 +95,35 @@ Displays interactive bar charts that help users analyze their historical energy 
 
 ### 9. Monthly Predictions
 
-**Description:**  
+**Description:**
+Generates forecasted monthly energy usage or cost using predictive analytics.
 
-**Requirements:** 
+**Requirements:**
+- Analyzes past energy usage and cost trends using linear regression.
+- Displays the forecasted monthly value beneath the Energy Monitor chart.  
+- Dynamically updates the prediction based on the selected view (cost or kWh).  
 
 ### 10. Energy Analysis
 
-**Description:**  
+**Description:**
+Provides users with AI-generated insights and breakdowns of their energy data.
 
-**Requirements:** 
+**Requirements:**
+- Allows users to select a billing period from a dropdown menu.
+- Generates and displays analytical content based on user data, including:  
+  - General summary  
+  - Cost breakdown  
+  - Usage patterns  
+  - Rate analysis  
+  - Efficiency tips  
+- Allows users to compare two different billing periods using a comparison option. 
 
 ### 11. User Household Comparison
 
-**Description:**  
+**Description:**
+Generates an analytical comparison of the user's energy consumption relative to similar households.
 
-**Requirements:** 
+**Requirements:**
+- Allows users to input their household profile using the following fields: number of bedrooms, number of occupants, and zip code.
+- Displays a textual comparison that describes whether or not the energy usage of the user's household for the current month is higher or lower relative to the average energy use of comparable households. 
+- Shows a bar chart that compares the user's current monthly usage against the average usage of peer households.

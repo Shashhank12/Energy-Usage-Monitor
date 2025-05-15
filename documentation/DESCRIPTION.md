@@ -67,5 +67,3 @@
 **Description:**  
 
 **Requirements:** 
-
-## Technical Constaints

@@ -43,3 +43,7 @@ Our product is an Android application called “Energy Use Monitor.” Its goal 
             * Energy Analysis: Analyze your energy usage patterns using Gemini and receive many types of analysis include comparison between other bills.
             * Household Comparison: Compare your energy usage with estimated usage based on your household size and occupancy.
             * Logout: Log out of your account and return to the login screen.
+
+## 📹 Demo Video
+
+https://drive.google.com/file/d/1TAoa7Wp35mkENUo5cdfkJBnt-kPdLZo7/view?usp=share_link 

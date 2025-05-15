@@ -4,7 +4,7 @@
 [Energy Usage Monitor GitHub](https://github.com/Shashhank12/Energy-Usage-Monitor)
 
 ## Overview
-Our product is an Android application called “Energy Use Monitor.” Its goal is to support users in lowering their personal energy use through a range of useful features and incentives. 
+Our product is an Android application called “Energy Usage Monitor.” Its goal is to support users in lowering their personal energy use through a range of useful features and incentives. 
 
 ## List of Features
 * Registration Page (Email verification and 2FA enrollment, PP+TOU links)

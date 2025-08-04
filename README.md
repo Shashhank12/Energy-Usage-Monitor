@@ -6,6 +6,9 @@
 ## Overview
 Our product is an Android application called “Energy Usage Monitor.” Its goal is to support users in lowering their personal energy use through a range of useful features and incentives. 
 
+## Demo
+https://github.com/user-attachments/assets/1b450ce5-7b36-4244-aa9c-73196a213c68
+
 ## List of Features
 * Registration Page (Email verification and 2FA enrollment, PP+TOU links)
 * Login Page (Google sign-in or registered account with 2FA)
